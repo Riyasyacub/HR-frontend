@@ -8,12 +8,14 @@ rules in [`../incubyte/AGENTS.md`](../incubyte/AGENTS.md); read that file first.
 | Item | Value |
 |---|---|
 | Stack | React 19 + TypeScript + Vite 8 |
+| UI | shadcn/ui + Tailwind CSS |
 | Tests | Vitest + React Testing Library (`npm test`) |
 | Lint / types | Oxlint (`npm run lint`), `npm run typecheck` |
 | Dev server | `npm run dev` at `http://localhost:5173` |
 | API proxy | `/api` → `http://localhost:3000` |
 
 - Follow TDD: write a failing component test, then the component, then refactor.
+- Use shadcn/ui with Tailwind CSS for UI components; do not add another component library.
 - The 50-line production chunk limit includes changes under `src/`; test files are excluded.
 - Log every prompt in `../incubyte/prompts/prompt-log.md`.
 - A story is complete only when its backend and frontend slices are both delivered and tested.

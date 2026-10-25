@@ -8,6 +8,16 @@ alongside the Rails API in the sibling `incubyte` repository.
 - Node.js 24+
 - The Rails API running at `http://localhost:3000`
 
+## UI
+
+Components use shadcn/ui with Tailwind CSS. Both are set up with the first frontend
+story slice; do not add another component library.
+
+## Current stage
+
+S01 is complete: sign-in, session restore, protected dashboard routes, role-aware landing,
+logout, and HR-only settings access.
+
 ## Commands
 
 ```bash
