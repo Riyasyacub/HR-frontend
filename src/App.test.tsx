@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, useLocation, useNavigate } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -9,8 +9,27 @@ import {
   signOut as signOutRequest,
   type AuthSession,
 } from './api/auth'
+import {
+  createDepartment,
+  deactivateDepartment,
+  listCountries,
+  listDepartments,
+  listLeaveTypes,
+  renameDepartment,
+  updateLeaveType,
+} from './api/settings'
 import { AuthProvider } from './auth/AuthContext'
 import App from './App'
+
+vi.mock('./api/settings', () => ({
+  createDepartment: vi.fn(),
+  deactivateDepartment: vi.fn(),
+  listCountries: vi.fn(),
+  listDepartments: vi.fn(),
+  listLeaveTypes: vi.fn(),
+  renameDepartment: vi.fn(),
+  updateLeaveType: vi.fn(),
+}))
 
 vi.mock('./api/auth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./api/auth')>()
@@ -81,6 +100,13 @@ async function submitCredentials(email: string, password = 'Demo@1234') {
 beforeEach(() => {
   vi.clearAllMocks()
   vi.mocked(refreshAccessToken).mockRejectedValue(new Error('no session'))
+  vi.mocked(listCountries).mockResolvedValue([])
+  vi.mocked(listDepartments).mockResolvedValue([])
+  vi.mocked(listLeaveTypes).mockResolvedValue([])
+  vi.mocked(createDepartment).mockReset()
+  vi.mocked(deactivateDepartment).mockReset()
+  vi.mocked(renameDepartment).mockReset()
+  vi.mocked(updateLeaveType).mockReset()
 })
 
 describe('App', () => {
@@ -145,6 +171,244 @@ describe('App', () => {
       await screen.findByRole('heading', { name: 'HR settings' }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/settings')
+  })
+
+  it('shows the read-only country reference data to HR', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(listCountries).mockResolvedValue([
+      { name: 'India', currency: 'INR' },
+      { name: 'USA', currency: 'USD' },
+      { name: 'Canada', currency: 'CAD' },
+    ])
+    renderApp('/settings')
+
+    const countries = await screen.findByRole('region', { name: 'Countries' })
+
+    expect(await within(countries).findByText('India')).toBeInTheDocument()
+    expect(within(countries).getByText('INR')).toBeInTheDocument()
+    expect(within(countries).getByText('USA')).toBeInTheDocument()
+    expect(within(countries).getByText('USD')).toBeInTheDocument()
+    expect(within(countries).getByText('Canada')).toBeInTheDocument()
+    expect(within(countries).getByText('CAD')).toBeInTheDocument()
+    expect(within(countries).queryByRole('textbox')).not.toBeInTheDocument()
+    expect(within(countries).queryByRole('button')).not.toBeInTheDocument()
+    expect(listCountries).toHaveBeenCalledWith('hr-token')
+  })
+
+  it('shows departments to HR, including inactive departments', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(listDepartments).mockResolvedValue([
+      { id: 1, name: 'Engineering', code: 'ENG', active: true },
+      { id: 2, name: 'Sales', code: 'SAL', active: false },
+    ])
+    renderApp('/settings')
+
+    const departments = await screen.findByRole('region', {
+      name: 'Departments',
+    })
+
+    expect(await within(departments).findByText('Engineering')).toBeInTheDocument()
+    expect(within(departments).getByText('(ENG)')).toBeInTheDocument()
+    expect(within(departments).getByText('Sales')).toBeInTheDocument()
+    expect(within(departments).getByText('Inactive')).toBeInTheDocument()
+  })
+
+  it('creates a department from the settings form', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(createDepartment).mockResolvedValue({
+      id: 1,
+      name: 'Engineering',
+      code: 'ENG',
+      active: true,
+    })
+    renderApp('/settings')
+
+    await screen.findByRole('region', { name: 'Departments' })
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Department name'), 'Engineering')
+    await user.type(screen.getByLabelText('Department code'), 'ENG')
+    await user.click(screen.getByRole('button', { name: 'Add department' }))
+
+    expect(createDepartment).toHaveBeenCalledWith(
+      'hr-token',
+      'Engineering',
+      'ENG',
+    )
+    expect(await screen.findByText('Engineering')).toBeInTheDocument()
+    expect(screen.getByText('(ENG)')).toBeInTheDocument()
+  })
+
+  it('shows a duplicate department error without adding a row', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(createDepartment).mockRejectedValue(
+      new ApiClientError(
+        'validation_failed',
+        'Name has already been taken',
+        422,
+      ),
+    )
+    renderApp('/settings')
+
+    await screen.findByRole('region', { name: 'Departments' })
+    const user = userEvent.setup()
+    await user.type(screen.getByLabelText('Department name'), 'Engineering')
+    await user.type(screen.getByLabelText('Department code'), 'ENG')
+    await user.click(screen.getByRole('button', { name: 'Add department' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Name has already been taken',
+    )
+    expect(screen.queryByText('Engineering')).not.toBeInTheDocument()
+  })
+
+  it('renames a department inline', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(listDepartments).mockResolvedValue([
+      { id: 1, name: 'Engineering', code: 'ENG', active: true },
+    ])
+    vi.mocked(renameDepartment).mockResolvedValue({
+      id: 1,
+      name: 'Product Engineering',
+      code: 'ENG',
+      active: true,
+    })
+    renderApp('/settings')
+
+    await screen.findByText('Engineering')
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Rename Engineering' }))
+    const input = screen.getByLabelText('New name for Engineering')
+    await user.clear(input)
+    await user.type(input, 'Product Engineering')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(renameDepartment).toHaveBeenCalledWith(
+      'hr-token',
+      1,
+      'Product Engineering',
+    )
+    expect(await screen.findByText('Product Engineering')).toBeInTheDocument()
+  })
+
+  it('shows a duplicate rename error and keeps the old name', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(listDepartments).mockResolvedValue([
+      { id: 1, name: 'Engineering', code: 'ENG', active: true },
+    ])
+    vi.mocked(renameDepartment).mockRejectedValue(
+      new ApiClientError(
+        'validation_failed',
+        'Name has already been taken',
+        422,
+      ),
+    )
+    renderApp('/settings')
+
+    await screen.findByText('Engineering')
+    const user = userEvent.setup()
+    await user.click(screen.getByRole('button', { name: 'Rename Engineering' }))
+    const input = screen.getByLabelText('New name for Engineering')
+    await user.clear(input)
+    await user.type(input, 'Sales')
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Name has already been taken',
+    )
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.getByText('Engineering')).toBeInTheDocument()
+  })
+
+  it('deactivates a department and removes its actions', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(listDepartments).mockResolvedValue([
+      { id: 1, name: 'Engineering', code: 'ENG', active: true },
+    ])
+    vi.mocked(deactivateDepartment).mockResolvedValue({
+      id: 1,
+      name: 'Engineering',
+      code: 'ENG',
+      active: false,
+    })
+    renderApp('/settings')
+
+    await screen.findByText('Engineering')
+    const user = userEvent.setup()
+    await user.click(
+      screen.getByRole('button', { name: 'Deactivate Engineering' }),
+    )
+
+    expect(deactivateDepartment).toHaveBeenCalledWith('hr-token', 1)
+    expect(await screen.findByText('Inactive')).toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Deactivate Engineering' }),
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Rename Engineering' }),
+    ).not.toBeInTheDocument()
+  })
+
+  it('shows leave types and only edits balanced entitlements', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(listLeaveTypes).mockResolvedValue([
+      { id: 1, name: 'Earned', default_entitlement: 6, balance_tracked: true },
+      { id: 4, name: 'Unpaid', default_entitlement: null, balance_tracked: false },
+    ])
+    renderApp('/settings')
+
+    const leaveTypes = await screen.findByRole('region', { name: 'Leave types' })
+
+    expect(await within(leaveTypes).findByText('Earned')).toBeInTheDocument()
+    expect(
+      within(leaveTypes).getByLabelText('Default entitlement for Earned'),
+    ).toHaveValue(6)
+    expect(within(leaveTypes).getByText('Unpaid')).toBeInTheDocument()
+    expect(
+      within(leaveTypes).queryByLabelText('Default entitlement for Unpaid'),
+    ).not.toBeInTheDocument()
+    expect(within(leaveTypes).getByText('No entitlement')).toBeInTheDocument()
+  })
+
+  it('updates a default entitlement', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(listLeaveTypes).mockResolvedValue([
+      { id: 1, name: 'Earned', default_entitlement: 6, balance_tracked: true },
+    ])
+    vi.mocked(updateLeaveType).mockResolvedValue({
+      id: 1,
+      name: 'Earned',
+      default_entitlement: 18,
+      balance_tracked: true,
+    })
+    renderApp('/settings')
+
+    const input = await screen.findByLabelText('Default entitlement for Earned')
+    const user = userEvent.setup()
+    await user.clear(input)
+    await user.type(input, '18')
+    await user.click(screen.getByRole('button', { name: 'Save Earned' }))
+
+    expect(updateLeaveType).toHaveBeenCalledWith('hr-token', 1, 18)
+    expect(input).toHaveValue(18)
+  })
+
+  it('rejects a negative entitlement without calling the API', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    vi.mocked(listLeaveTypes).mockResolvedValue([
+      { id: 1, name: 'Earned', default_entitlement: 6, balance_tracked: true },
+    ])
+    renderApp('/settings')
+
+    const input = await screen.findByLabelText('Default entitlement for Earned')
+    const user = userEvent.setup()
+    await user.clear(input)
+    await user.type(input, '-1')
+    await user.click(screen.getByRole('button', { name: 'Save Earned' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Default entitlement must be a non-negative whole number',
+    )
+    expect(updateLeaveType).not.toHaveBeenCalled()
   })
 
   it('denies an employee direct access to settings', async () => {
