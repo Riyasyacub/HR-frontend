@@ -1,6 +1,9 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
 import DashboardPage from './pages/DashboardPage'
+import EmployeeProfilePage from './pages/EmployeeProfilePage'
+import EmployeesPage from './pages/EmployeesPage'
+import NewEmployeePage from './pages/NewEmployeePage'
 import SettingsPage from './pages/SettingsPage'
 import SignInPage from './pages/SignInPage'
 
@@ -22,7 +25,10 @@ export default function App() {
       <Route path="/sign-in" element={<SignInPage />} />
       <Route element={<RequireAuth />}>
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/employees/:id" element={<EmployeeProfilePage />} />
         <Route element={<RequireHr />}>
+          <Route path="/employees" element={<EmployeesPage />} />
+          <Route path="/employees/new" element={<NewEmployeePage />} />
           <Route path="/settings" element={<SettingsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
