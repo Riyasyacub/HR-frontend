@@ -1,8 +1,8 @@
-import { request } from './auth'
+import { ApiClientError, request } from './auth'
 
 export type PayrollRun = {
   id: number; month: string; status: 'draft' | 'generated' | 'paid'
-  calculation_status: 'queued' | 'processing' | 'completed' | 'failed'; calculation_error: string | null; created_at: string
+  calculation_status: 'queued' | 'processing' | 'completed' | 'failed'; calculation_error: string | null; paid_on: string | null; created_at: string
 }
 export type PayrollRunPage = { data: PayrollRun[]; meta: { page: number; per_page: number; total: number } }
 
@@ -41,4 +41,20 @@ export type PayrollLinePage = { data: PayrollLine[]; meta: { page: number; per_p
 export function listPayrollLines(accessToken: string, runId: number, page: number, issuesOnly: boolean): Promise<PayrollLinePage> {
   const query = new URLSearchParams({ page: String(page), ...(issuesOnly && { issues_only: 'true' }) })
   return request<PayrollLinePage>(`/payroll_runs/${runId}/lines?${query}`, { headers: auth(accessToken) })
+}
+
+async function postRun(accessToken: string, id: number, action: string, body?: object): Promise<PayrollRun> {
+  const { data } = await request<{ data: PayrollRun }>(`/payroll_runs/${id}/${action}`, {
+    method: 'POST', headers: auth(accessToken), body: body && JSON.stringify(body),
+  })
+  return data
+}
+
+export const generatePayrollRun = (accessToken: string, id: number) => postRun(accessToken, id, 'generate')
+export const markPayrollRunPaid = (accessToken: string, id: number, paidOn: string) => postRun(accessToken, id, 'mark_paid', { paid_on: paidOn })
+
+export async function downloadPayrollExport(accessToken: string, id: number): Promise<Blob> {
+  const response = await fetch(`/api/v1/payroll_runs/${id}/export`, { credentials: 'include', headers: auth(accessToken) })
+  if (!response.ok) throw new ApiClientError('request_failed', 'Could not download the payroll export.', response.status)
+  return response.blob()
 }

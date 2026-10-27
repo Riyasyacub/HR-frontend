@@ -10,7 +10,7 @@ import PayrollRunsPage from './PayrollRunsPage'
 vi.mock('../api/payroll', () => ({ createPayrollRun: vi.fn(), listPayrollRuns: vi.fn() }))
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
 
-const october: PayrollRun = { id: 3, month: '2026-10-01', status: 'draft', calculation_status: 'completed', calculation_error: null, created_at: '' }
+const october: PayrollRun = { id: 3, month: '2026-10-01', status: 'draft', calculation_status: 'completed', calculation_error: null, paid_on: null, created_at: '' }
 const page = (data: PayrollRun[]) => ({ data, meta: { page: 1, per_page: 25, total: data.length } })
 
 function renderPage() {

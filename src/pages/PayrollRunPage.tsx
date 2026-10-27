@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom'
 import { getPayrollRun, recalculatePayrollRun, type PayrollRunDetail } from '../api/payroll'
 import { useAuth } from '../auth/AuthContext'
 import PayrollLinesTable from '../components/PayrollLinesTable'
+import PayrollRunActions from '../components/PayrollRunActions'
 import { Button } from '../components/ui/button'
 
 const POLL_INTERVAL_MS = 2000
@@ -46,6 +47,7 @@ export default function PayrollRunPage() {
         {run.status === 'draft' && <Button variant="outline" disabled={calculating} onClick={() => void recalculate()}>Recalculate</Button>}
       </div>
       <p className="text-sm text-muted-foreground">{run.status} · {run.calculation_status}</p>
+      {session && <PayrollRunActions accessToken={session.access_token} run={run} blockingIssues={issues} onChange={(updated) => setRun({ ...run, ...updated })} />}
       {(error || run.calculation_status === 'failed') && <p role="alert" className="text-sm text-red-600">{error || `Calculation failed: ${run.calculation_error}`}</p>}
       <p className={issues ? 'text-sm text-red-600' : 'text-sm'}>
         {issues ? `${issues} ${issues === 1 ? 'employee has' : 'employees have'} blocking issues and must be fixed before export.` : 'No blocking issues.'}

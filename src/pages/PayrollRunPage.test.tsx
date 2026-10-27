@@ -8,10 +8,11 @@ import PayrollRunPage from './PayrollRunPage'
 
 vi.mock('../api/payroll', () => ({ getPayrollRun: vi.fn(), recalculatePayrollRun: vi.fn() }))
 vi.mock('../components/PayrollLinesTable', () => ({ default: () => <p>lines table</p> }))
+vi.mock('../components/PayrollRunActions', () => ({ default: () => <p>run actions</p> }))
 vi.mock('../auth/AuthContext', () => ({ useAuth: vi.fn() }))
 
 const run: PayrollRunDetail = {
-  id: 4, month: '2026-11-01', status: 'draft', calculation_status: 'completed', calculation_error: null, created_at: '',
+  id: 4, month: '2026-11-01', status: 'draft', calculation_status: 'completed', calculation_error: null, paid_on: null, created_at: '',
   blocking_issues_count: 1,
   totals: [
     { country: 'India', currency: 'INR', employees: 2, monthly_gross: '150000.00', unpaid_deduction: '10000.00', total: '140000.00' },
@@ -96,5 +97,13 @@ describe('PayrollRunPage', () => {
     renderPage()
 
     expect(await screen.findByText('lines table')).toBeInTheDocument()
+  })
+
+  it('renders the generate, export and paid actions', async () => {
+    vi.mocked(getPayrollRun).mockResolvedValue(run)
+
+    renderPage()
+
+    expect(await screen.findByText('run actions')).toBeInTheDocument()
   })
 })

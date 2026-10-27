@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createPayrollRun, getPayrollRun, listPayrollLines, listPayrollRuns, recalculatePayrollRun } from './payroll'
+import { createPayrollRun, downloadPayrollExport, generatePayrollRun, getPayrollRun, listPayrollLines, listPayrollRuns, markPayrollRunPaid, recalculatePayrollRun } from './payroll'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -47,5 +47,27 @@ describe('payroll api', () => {
     await listPayrollLines('token', 4, 2, true)
 
     expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/payroll_runs/4/lines?page=2&issues_only=true')
+  })
+
+  it('generates a run and marks it paid on a date', async () => {
+    const fetchMock = stubFetch({ data: { id: 4 } })
+
+    await generatePayrollRun('token', 4)
+    await markPayrollRunPaid('token', 4, '2026-12-01')
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/payroll_runs/4/generate')
+    expect(fetchMock.mock.calls[0][1]).toMatchObject({ method: 'POST' })
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/v1/payroll_runs/4/mark_paid')
+    expect(fetchMock.mock.calls[1][1]).toMatchObject({ method: 'POST', body: JSON.stringify({ paid_on: '2026-12-01' }) })
+  })
+
+  it('downloads the export with the bearer token', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, blob: async () => new Blob(['xlsx']) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await expect(downloadPayrollExport('token', 4)).resolves.toBeInstanceOf(Blob)
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/payroll_runs/4/export')
+    expect(new Headers(fetchMock.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer token')
   })
 })
