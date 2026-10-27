@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
-import { getEmployee, listEmployees, updateEmployeeManager, type EmployeeDetail, type EmployeeSummary } from '../api/employees'
+import { getEmployee, listEmployees, updateEmployeeManager, updateSelfContact, type EmployeeDetail, type EmployeeSummary } from '../api/employees'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
 
@@ -13,10 +13,21 @@ export default function EmployeeProfilePage() {
   const [error, setError] = useState('')
   const [managerError, setManagerError] = useState('')
 
+  const [contactFields, setContactFields] = useState({ phone: '', personal_email: '', address: '', emergency_contact: '' })
+  const [contactSaving, setContactSaving] = useState(false)
+  const [contactError, setContactError] = useState('')
+  const [contactSaved, setContactSaved] = useState(false)
+
   useEffect(() => {
     if (session && id) getEmployee(session.access_token, Number(id)).then((data) => {
       setEmployee(data)
       setManagerId(data.manager?.id ? String(data.manager.id) : '')
+      setContactFields({
+        phone: data.phone || '',
+        personal_email: data.personal_email || '',
+        address: data.address || '',
+        emergency_contact: data.emergency_contact || '',
+      })
     }).catch((e) => setError(e instanceof Error ? e.message : 'Could not load profile.'))
   }, [session, id])
 
@@ -26,6 +37,22 @@ export default function EmployeeProfilePage() {
       .then((res) => setManagers(res.data.filter((m) => m.id !== Number(id))))
       .catch(() => setManagerError('Could not load managers.'))
   }, [session, id])
+
+  async function saveContact(event: FormEvent) {
+    event.preventDefault()
+    if (!session || !employee) return
+    setContactSaving(true)
+    setContactError('')
+    setContactSaved(false)
+    try {
+      await updateSelfContact(session.access_token, employee.id, contactFields)
+      setContactSaved(true)
+      setContactSaving(false)
+    } catch (err) {
+      setContactError(err instanceof Error ? err.message : 'Save failed.')
+      setContactSaving(false)
+    }
+  }
 
   async function saveManager(event: FormEvent) {
     event.preventDefault()
@@ -57,6 +84,22 @@ export default function EmployeeProfilePage() {
         <div><span className="text-muted-foreground">Country:</span> {employee.country}</div>
         <div><span className="text-muted-foreground">Start date:</span> {employee.start_date}</div>
       </div>
+      {employee.editable && (
+        <form onSubmit={saveContact} className="border p-4 rounded text-sm space-y-3">
+          <h2 className="font-semibold">Contact (editable)</h2>
+          <div className="grid grid-cols-2 gap-2">
+            <input aria-label="Phone" value={contactFields.phone} onChange={(e) => setContactFields({ ...contactFields, phone: e.target.value })} className="border rounded p-1.5 text-sm" placeholder="Phone" />
+            <input aria-label="Personal email" value={contactFields.personal_email} onChange={(e) => setContactFields({ ...contactFields, personal_email: e.target.value })} className="border rounded p-1.5 text-sm" placeholder="Personal email" />
+            <input aria-label="Address" value={contactFields.address} onChange={(e) => setContactFields({ ...contactFields, address: e.target.value })} className="border rounded p-1.5 text-sm col-span-2" placeholder="Address" />
+            <input aria-label="Emergency contact" value={contactFields.emergency_contact} onChange={(e) => setContactFields({ ...contactFields, emergency_contact: e.target.value })} className="border rounded p-1.5 text-sm col-span-2" placeholder="Emergency contact" />
+          </div>
+          <div className="flex gap-2">
+            <Button type="submit" disabled={contactSaving} variant="outline">Save contact</Button>
+            {contactSaved && <p className="text-sm text-green-700">Contact saved.</p>}
+            {contactError && <p role="alert" className="text-sm text-red-600">{contactError}</p>}
+          </div>
+        </form>
+      )}
       <div className="border p-4 rounded text-sm space-y-2">
         <h2 className="font-semibold">Manager</h2>
         <p data-testid="current-manager">

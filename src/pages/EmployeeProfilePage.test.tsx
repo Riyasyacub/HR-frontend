@@ -6,6 +6,7 @@ import {
   getEmployee,
   listEmployees,
   updateEmployeeManager,
+  updateSelfContact,
 } from '../api/employees'
 import { useAuth } from '../auth/AuthContext'
 import EmployeeProfilePage from './EmployeeProfilePage'
@@ -15,6 +16,7 @@ vi.mock('../api/employees', () => ({
   listEmployees: vi.fn(),
   createEmployee: vi.fn(),
   updateEmployeeManager: vi.fn(),
+  updateSelfContact: vi.fn(),
 }))
 
 vi.mock('../auth/AuthContext', () => ({
@@ -113,6 +115,42 @@ describe('EmployeeProfilePage', () => {
     // Confirm no editable inputs for bank or CTC
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     expect(getEmployee).toHaveBeenCalledWith('user-token', 1)
+  })
+
+  it('lets the profile owner save their contact details when editable', async () => {
+    const priya = {
+      id: 1, employee_id: 'EMP101', first_name: 'Priya', last_name: 'Sharma', work_email: 'priya@demo.test',
+      country: 'India', currency: 'INR', job_title: 'Engineer', start_date: '2026-01-01', status: 'active' as const,
+      department: { id: 10, name: 'Product' }, manager: null, editable: true, phone: '+91-1',
+    }
+    vi.mocked(getEmployee).mockResolvedValue(priya)
+    vi.mocked(updateSelfContact).mockResolvedValue({ ...priya, phone: '+91-98765-43210' })
+
+    renderProfile('1')
+
+    const phone = await screen.findByRole('textbox', { name: 'Phone' })
+    expect(phone).toHaveValue('+91-1')
+    await userEvent.clear(phone)
+    await userEvent.type(phone, '+91-98765-43210')
+    await userEvent.click(screen.getByRole('button', { name: 'Save contact' }))
+
+    await waitFor(() => expect(updateSelfContact).toHaveBeenCalledWith('user-token', 1, {
+      phone: '+91-98765-43210', personal_email: '', address: '', emergency_contact: '',
+    }))
+    expect(await screen.findByText('Contact saved.')).toBeInTheDocument()
+  })
+
+  it('hides the contact form when the profile is not editable', async () => {
+    vi.mocked(getEmployee).mockResolvedValue({
+      id: 1, employee_id: 'EMP101', first_name: 'Priya', last_name: 'Sharma', work_email: 'priya@demo.test',
+      country: 'India', currency: 'INR', job_title: 'Engineer', start_date: '2026-01-01', status: 'active',
+      department: { id: 10, name: 'Product' }, manager: null, editable: false,
+    })
+
+    renderProfile('1')
+
+    await screen.findByRole('heading', { name: 'Priya Sharma' })
+    expect(screen.queryByRole('button', { name: 'Save contact' })).not.toBeInTheDocument()
   })
 
   it('hides bank and compensation from a manager viewing a report', async () => {

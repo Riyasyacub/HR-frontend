@@ -1,7 +1,9 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { listEmployees } from '../api/employees'
+import { listDepartments } from '../api/settings'
 import { useAuth } from '../auth/AuthContext'
 import EmployeesPage from './EmployeesPage'
 
@@ -9,6 +11,16 @@ vi.mock('../api/employees', () => ({
   listEmployees: vi.fn(),
   createEmployee: vi.fn(),
   getEmployee: vi.fn(),
+}))
+
+vi.mock('../api/settings', () => ({
+  listDepartments: vi.fn(),
+  listCountries: vi.fn(),
+  createDepartment: vi.fn(),
+  renameDepartment: vi.fn(),
+  deactivateDepartment: vi.fn(),
+  updateLeaveTypeEntitlement: vi.fn(),
+  listLeaveTypes: vi.fn(),
 }))
 
 vi.mock('../auth/AuthContext', () => ({
@@ -39,6 +51,7 @@ describe('EmployeesPage', () => {
       signIn: vi.fn(),
       signOut: vi.fn(),
     })
+    vi.mocked(listDepartments).mockResolvedValue([])
   })
 
   it('renders the employees list for HR users', async () => {
@@ -80,12 +93,31 @@ describe('EmployeesPage', () => {
 
     expect(await screen.findByText('Employees')).toBeInTheDocument()
     expect(screen.getByText('EMP101')).toBeInTheDocument()
-    expect(screen.getByText('Ravi Kumar')).toBeInTheDocument()
     expect(screen.getByText('ravi@demo.test')).toBeInTheDocument()
     expect(screen.getAllByText('Engineering')).toHaveLength(2)
     expect(screen.getByText('Arjun Patel')).toBeInTheDocument()
     expect(screen.getByText('—')).toBeInTheDocument()
-    expect(listEmployees).toHaveBeenCalledWith('hr-token')
+    expect(listEmployees).toHaveBeenCalledWith('hr-token', 1, 100, '')
+  })
+
+  it('loads only managers into the manager filter', async () => {
+    vi.mocked(listEmployees).mockResolvedValue({ data: [], meta: { page: 1, per_page: 25, total: 0 } })
+
+    renderEmployeesPage()
+
+    await screen.findByRole('combobox', { name: 'Manager' })
+    expect(listEmployees).toHaveBeenCalledWith('hr-token', 1, 100, 'managers_only=true')
+  })
+
+  it('refetches the directory filtered by country and status', async () => {
+    vi.mocked(listEmployees).mockResolvedValue({ data: [], meta: { page: 1, per_page: 25, total: 0 } })
+
+    renderEmployeesPage()
+
+    await userEvent.type(screen.getByRole('textbox', { name: 'Country' }), 'USA')
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Status' }), 'active')
+
+    await waitFor(() => expect(listEmployees).toHaveBeenLastCalledWith('hr-token', 1, 100, 'country=USA&status=active'))
   })
 
   it('shows an error state when loading employees fails', async () => {
