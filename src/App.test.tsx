@@ -224,6 +224,27 @@ describe('App', () => {
     }
   })
 
+  it('links HR to the employee list and settings from the dashboard', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    renderApp('/dashboard')
+
+    expect(await screen.findByRole('link', { name: 'Employees' })).toHaveAttribute('href', '/employees')
+    expect(screen.getByRole('link', { name: 'Settings' })).toHaveAttribute('href', '/settings')
+  })
+
+  it('lets HR open the employee import from the dashboard and redirects an employee', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(hrSession)
+    const { unmount } = renderApp('/dashboard')
+
+    await userEvent.click(await screen.findByRole('link', { name: 'Employee import' }))
+    expect(await screen.findByRole('heading', { name: 'Employee import' })).toBeInTheDocument()
+    unmount()
+
+    vi.mocked(refreshAccessToken).mockResolvedValue(employeeSession)
+    renderApp('/employee-import')
+    expect(await screen.findByRole('heading', { name: 'Employee dashboard' })).toBeInTheDocument()
+  })
+
   it('redirects an employee without reports away from reports', async () => {
     vi.mocked(refreshAccessToken).mockResolvedValue(employeeSession)
     renderApp('/reports')

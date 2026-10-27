@@ -20,8 +20,11 @@ export default function DashboardPage() {
       </div>
       {isHr && (
         <div className="mt-4">
-          <Link to="/leave-upload" className="text-sm underline">Leave upload</Link>
+          <Link to="/employees" className="text-sm underline">Employees</Link>
+          <Link to="/leave-upload" className="text-sm underline ml-4">Leave upload</Link>
+          <Link to="/employee-import" className="text-sm underline ml-4">Employee import</Link>
           <Link to="/payroll" className="text-sm underline ml-4">Payroll</Link>
+          <Link to="/settings" className="text-sm underline ml-4">Settings</Link>
         </div>
       )}
       {isManager && (

@@ -1,6 +1,7 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
 import DashboardPage from './pages/DashboardPage'
+import EmployeeImportPage from './pages/EmployeeImportPage'
 import EmployeeProfilePage from './pages/EmployeeProfilePage'
 import EmployeesPage from './pages/EmployeesPage'
 import NewEmployeePage from './pages/NewEmployeePage'
@@ -54,6 +55,7 @@ export default function App() {
           <Route path="/employees/new" element={<NewEmployeePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/leave-upload" element={<LeaveUploadPage />} />
+          <Route path="/employee-import" element={<EmployeeImportPage />} />
           <Route path="/payroll" element={<PayrollRunsPage />} />
           <Route path="/payroll/:id" element={<PayrollRunPage />} />
         </Route>
