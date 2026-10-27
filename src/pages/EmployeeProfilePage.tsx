@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useParams } from 'react-router-dom'
 import { getEmployee, listEmployees, updateEmployeeManager, updateSelfContact, type EmployeeDetail, type EmployeeSummary } from '../api/employees'
 import { useAuth } from '../auth/AuthContext'
+import LeaveBalances from '../components/LeaveBalances'
+import LeaveHistory from '../components/LeaveHistory'
 import { Button } from '../components/ui/button'
 
 export default function EmployeeProfilePage() {
@@ -135,6 +137,8 @@ export default function EmployeeProfilePage() {
           <div className="space-y-1 text-xs text-muted-foreground">{c.components.map((comp) => (<div key={comp.id} className="flex justify-between"><span>{comp.name}</span><span>{comp.annual_amount} {c.currency}</span></div>))}</div>
         </div>
       )}
+      {session && <LeaveBalances accessToken={session.access_token} employeeId={employee.id} />}
+      {session && <LeaveHistory accessToken={session.access_token} employeeId={employee.id} />}
     </main>
   )
 }

@@ -12,6 +12,14 @@ export default function DashboardPage() {
     <main className="p-6">
       <h1 className="text-2xl font-semibold">{heading}</h1>
       <p className="mt-2 text-sm text-muted-foreground">{session?.user.name}</p>
+      <div className="mt-4">
+        <Link to="/leave-records" className="text-sm underline">Leave records</Link>
+      </div>
+      {isHr && (
+        <div className="mt-4">
+          <Link to="/leave-upload" className="text-sm underline">Leave upload</Link>
+        </div>
+      )}
       {isManager && (
         <div className="mt-4">
           <Link to="/team" className="text-sm underline">My team</Link>

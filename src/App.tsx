@@ -4,6 +4,8 @@ import DashboardPage from './pages/DashboardPage'
 import EmployeeProfilePage from './pages/EmployeeProfilePage'
 import EmployeesPage from './pages/EmployeesPage'
 import NewEmployeePage from './pages/NewEmployeePage'
+import LeaveRecordsPage from './pages/LeaveRecordsPage'
+import LeaveUploadPage from './pages/LeaveUploadPage'
 import SettingsPage from './pages/SettingsPage'
 import SignInPage from './pages/SignInPage'
 import TeamPage from './pages/TeamPage'
@@ -32,6 +34,7 @@ export default function App() {
       <Route element={<RequireAuth />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/employees/:id" element={<EmployeeProfilePage />} />
+        <Route path="/leave-records" element={<LeaveRecordsPage />} />
         <Route element={<RequireManager />}>
           <Route path="/team" element={<TeamPage />} />
         </Route>
@@ -39,6 +42,7 @@ export default function App() {
           <Route path="/employees" element={<EmployeesPage />} />
           <Route path="/employees/new" element={<NewEmployeePage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/leave-upload" element={<LeaveUploadPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

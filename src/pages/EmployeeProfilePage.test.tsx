@@ -8,6 +8,7 @@ import {
   updateEmployeeManager,
   updateSelfContact,
 } from '../api/employees'
+import { listLeaveRecords } from '../api/leaves'
 import { useAuth } from '../auth/AuthContext'
 import EmployeeProfilePage from './EmployeeProfilePage'
 
@@ -17,6 +18,11 @@ vi.mock('../api/employees', () => ({
   createEmployee: vi.fn(),
   updateEmployeeManager: vi.fn(),
   updateSelfContact: vi.fn(),
+}))
+
+vi.mock('../api/leaves', () => ({
+  listLeaveRecords: vi.fn().mockResolvedValue({ data: [], meta: { page: 1, per_page: 100, total: 0 } }),
+  getLeaveBalances: vi.fn().mockResolvedValue([]),
 }))
 
 vi.mock('../auth/AuthContext', () => ({
@@ -115,6 +121,9 @@ describe('EmployeeProfilePage', () => {
     // Confirm no editable inputs for bank or CTC
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     expect(getEmployee).toHaveBeenCalledWith('user-token', 1)
+    expect(await screen.findByRole('heading', { name: 'Leave history' })).toBeInTheDocument()
+    expect(listLeaveRecords).toHaveBeenCalledWith('user-token', '', 1)
+    expect(screen.getByRole('heading', { name: 'Leave balances' })).toBeInTheDocument()
   })
 
   it('lets the profile owner save their contact details when editable', async () => {
