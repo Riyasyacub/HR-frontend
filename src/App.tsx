@@ -6,6 +6,8 @@ import EmployeesPage from './pages/EmployeesPage'
 import NewEmployeePage from './pages/NewEmployeePage'
 import LeaveRecordsPage from './pages/LeaveRecordsPage'
 import LeaveUploadPage from './pages/LeaveUploadPage'
+import PayrollRunPage from './pages/PayrollRunPage'
+import PayrollRunsPage from './pages/PayrollRunsPage'
 import SettingsPage from './pages/SettingsPage'
 import SignInPage from './pages/SignInPage'
 import TeamPage from './pages/TeamPage'
@@ -43,6 +45,8 @@ export default function App() {
           <Route path="/employees/new" element={<NewEmployeePage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/leave-upload" element={<LeaveUploadPage />} />
+          <Route path="/payroll" element={<PayrollRunsPage />} />
+          <Route path="/payroll/:id" element={<PayrollRunPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Route>

@@ -18,6 +18,7 @@ export default function DashboardPage() {
       {isHr && (
         <div className="mt-4">
           <Link to="/leave-upload" className="text-sm underline">Leave upload</Link>
+          <Link to="/payroll" className="text-sm underline ml-4">Payroll</Link>
         </div>
       )}
       {isManager && (
