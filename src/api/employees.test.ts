@@ -2,7 +2,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   createEmployee,
   getEmployee,
+  getTeam,
   listEmployees,
+  updateEmployeeManager,
   type CreateEmployeeInput,
 } from './employees'
 
@@ -99,12 +101,55 @@ describe('employees API', () => {
     const result = await createEmployee('hr-token', payload)
     expect(result).toEqual(createdEmployee)
 
+    const { components, ...employeeAttributes } = payload
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/employees',
       expect.objectContaining({
         method: 'POST',
         credentials: 'include',
-        body: JSON.stringify({ employee: payload }),
+        body: JSON.stringify({
+          employee: employeeAttributes,
+          compensation: { components },
+        }),
+      }),
+    )
+  })
+
+  it('updates an employee manager and can remove it', async () => {
+    const updated = {
+      id: 2,
+      employee_id: 'EMP102',
+      first_name: 'Priya',
+      last_name: 'Sharma',
+      work_email: 'priya@demo.test',
+      country: 'India',
+      currency: 'INR',
+      job_title: 'Product Manager',
+      start_date: '2026-02-01',
+      status: 'active',
+      department: { id: 10, name: 'Engineering' },
+      manager: { id: 1, employee_id: 'EMP101', name: 'Arjun Patel' },
+    }
+    const fetchMock = mockFetch(response({ data: updated }))
+
+    const result = await updateEmployeeManager('hr-token', 2, 1)
+    expect(result).toEqual(updated)
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      '/api/v1/employees/2',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ employee: { manager_id: 1 } }),
+      }),
+    )
+
+    await updateEmployeeManager('hr-token', 2, null)
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/employees/2',
+      expect.objectContaining({
+        method: 'PATCH',
+        body: JSON.stringify({ employee: { manager_id: null } }),
       }),
     )
   })
@@ -138,6 +183,32 @@ describe('employees API', () => {
 
     expect(fetchMock).toHaveBeenCalledWith(
       '/api/v1/employees/1',
+      expect.objectContaining({ credentials: 'include' }),
+    )
+  })
+
+  it('fetches manager team subtree via getTeam', async () => {
+    const team = [
+      {
+        id: 2,
+        employee_id: 'EMP102',
+        first_name: 'Priya',
+        last_name: 'Sharma',
+        work_email: 'priya@demo.test',
+        country: 'India',
+        currency: 'INR',
+        job_title: 'Software Engineer',
+        start_date: '2026-01-01',
+        status: 'active' as const,
+        department: { id: 10, name: 'Engineering' },
+      },
+    ]
+    const fetchMock = mockFetch(response({ data: team }))
+
+    const result = await getTeam('manager-token')
+    expect(result).toEqual(team)
+    expect(fetchMock).toHaveBeenCalledWith(
+      '/api/v1/employees/team',
       expect.objectContaining({ credentials: 'include' }),
     )
   })

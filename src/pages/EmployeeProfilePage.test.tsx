@@ -1,7 +1,12 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getEmployee } from '../api/employees'
+import {
+  getEmployee,
+  listEmployees,
+  updateEmployeeManager,
+} from '../api/employees'
 import { useAuth } from '../auth/AuthContext'
 import EmployeeProfilePage from './EmployeeProfilePage'
 
@@ -9,6 +14,7 @@ vi.mock('../api/employees', () => ({
   getEmployee: vi.fn(),
   listEmployees: vi.fn(),
   createEmployee: vi.fn(),
+  updateEmployeeManager: vi.fn(),
 }))
 
 vi.mock('../auth/AuthContext', () => ({
@@ -23,6 +29,20 @@ function renderProfile(id = '1') {
       </Routes>
     </MemoryRouter>,
   )
+}
+
+function useHrSession() {
+  vi.mocked(useAuth).mockReturnValue({
+    session: {
+      access_token: 'hr-token',
+      token_type: 'Bearer',
+      expires_in: 900,
+      user: { id: 1, name: 'HR Admin', email: 'hr@demo.test', role: 'HR', country: 'India' },
+    },
+    status: 'authenticated',
+    signIn: vi.fn(),
+    signOut: vi.fn(),
+  })
 }
 
 describe('EmployeeProfilePage', () => {
@@ -54,6 +74,7 @@ describe('EmployeeProfilePage', () => {
       start_date: '2026-01-01',
       status: 'active',
       department: { id: 10, name: 'Product' },
+      manager: { id: 9, employee_id: 'EMP100', name: 'Arjun Patel' },
       bank: { bank_name: 'HDFC Bank', ifsc: 'HDFC0001', account_number: '987654321' },
       compensation: {
         id: 5,
@@ -73,6 +94,9 @@ describe('EmployeeProfilePage', () => {
     expect(screen.getByText('EMP101')).toBeInTheDocument()
     expect(screen.getByText('Product Manager')).toBeInTheDocument()
     expect(screen.getByText('Product')).toBeInTheDocument()
+    expect(screen.getByTestId('current-manager')).toHaveTextContent('Arjun Patel (EMP100)')
+    expect(screen.queryByRole('combobox', { name: 'Manager' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Save manager' })).not.toBeInTheDocument()
 
     // Bank details (read-only)
     expect(screen.getByText('HDFC Bank')).toBeInTheDocument()
@@ -89,6 +113,186 @@ describe('EmployeeProfilePage', () => {
     // Confirm no editable inputs for bank or CTC
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
     expect(getEmployee).toHaveBeenCalledWith('user-token', 1)
+  })
+
+  it('hides bank and compensation from a manager viewing a report', async () => {
+    vi.mocked(getEmployee).mockResolvedValue({
+      id: 3,
+      employee_id: 'EMP104',
+      first_name: 'Kavita',
+      last_name: 'Rao',
+      work_email: 'kavita@demo.test',
+      country: 'India',
+      currency: 'INR',
+      job_title: 'Engineer',
+      start_date: '2026-02-01',
+      status: 'active',
+      department: { id: 2, name: 'Engineering' },
+    })
+
+    renderProfile('3')
+
+    expect(await screen.findByRole('heading', { name: 'Kavita Rao' })).toBeInTheDocument()
+    expect(screen.queryByText('Bank details (read-only)')).not.toBeInTheDocument()
+    expect(screen.queryByText('Compensation (read-only)')).not.toBeInTheDocument()
+    expect(
+      screen.getByText('Compensation and bank details are private.'),
+    ).toBeInTheDocument()
+  })
+
+  it('lets HR assign a manager from the profile', async () => {
+    useHrSession()
+    const employee = {
+      id: 2,
+      employee_id: 'EMP102',
+      first_name: 'Priya',
+      last_name: 'Sharma',
+      work_email: 'priya@demo.test',
+      country: 'India',
+      currency: 'INR',
+      job_title: 'Product Manager',
+      start_date: '2026-02-01',
+      status: 'active' as const,
+      department: { id: 10, name: 'Product' },
+      manager: null,
+    }
+    const arjun = {
+      id: 9,
+      employee_id: 'EMP100',
+      first_name: 'Arjun',
+      last_name: 'Patel',
+      work_email: 'arjun@demo.test',
+      country: 'India',
+      currency: 'INR',
+      job_title: 'Engineering Manager',
+      start_date: '2025-01-01',
+      status: 'active' as const,
+      department: { id: 10, name: 'Product' },
+      manager: null,
+    }
+    vi.mocked(getEmployee).mockResolvedValue(employee)
+    vi.mocked(listEmployees).mockResolvedValue({
+      data: [employee, arjun],
+      meta: { page: 1, per_page: 100, total: 2 },
+    })
+    vi.mocked(updateEmployeeManager).mockResolvedValue({
+      ...employee,
+      manager: { id: 9, employee_id: 'EMP100', name: 'Arjun Patel' },
+    })
+
+    renderProfile('2')
+
+    expect(await screen.findByTestId('current-manager')).toHaveTextContent('No manager')
+    await screen.findByRole('option', { name: 'Arjun Patel (EMP100)' })
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Manager' }), '9')
+    await userEvent.click(screen.getByRole('button', { name: 'Save manager' }))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('current-manager')).toHaveTextContent('Arjun Patel (EMP100)'),
+    )
+    expect(updateEmployeeManager).toHaveBeenCalledWith('hr-token', 2, 9)
+  })
+
+  it('lets HR remove a manager from the profile', async () => {
+    useHrSession()
+    const arjun = {
+      id: 9,
+      employee_id: 'EMP100',
+      first_name: 'Arjun',
+      last_name: 'Patel',
+      work_email: 'arjun@demo.test',
+      country: 'India',
+      currency: 'INR',
+      job_title: 'Engineering Manager',
+      start_date: '2025-01-01',
+      status: 'active' as const,
+      department: { id: 10, name: 'Product' },
+      manager: null,
+    }
+    const employee = {
+      id: 2,
+      employee_id: 'EMP102',
+      first_name: 'Priya',
+      last_name: 'Sharma',
+      work_email: 'priya@demo.test',
+      country: 'India',
+      currency: 'INR',
+      job_title: 'Product Manager',
+      start_date: '2026-02-01',
+      status: 'active' as const,
+      department: { id: 10, name: 'Product' },
+      manager: { id: 9, employee_id: 'EMP100', name: 'Arjun Patel' },
+    }
+    vi.mocked(getEmployee).mockResolvedValue(employee)
+    vi.mocked(listEmployees).mockResolvedValue({
+      data: [employee, arjun],
+      meta: { page: 1, per_page: 100, total: 2 },
+    })
+    vi.mocked(updateEmployeeManager).mockResolvedValue({ ...employee, manager: null })
+
+    renderProfile('2')
+
+    expect(await screen.findByTestId('current-manager')).toHaveTextContent('Arjun Patel (EMP100)')
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Manager' }), '')
+    await userEvent.click(screen.getByRole('button', { name: 'Save manager' }))
+
+    await waitFor(() =>
+      expect(screen.getByTestId('current-manager')).toHaveTextContent('No manager'),
+    )
+    expect(updateEmployeeManager).toHaveBeenCalledWith('hr-token', 2, null)
+  })
+
+  it('shows the API error when a manager assignment is rejected', async () => {
+    useHrSession()
+    const employee = {
+      id: 2,
+      employee_id: 'EMP102',
+      first_name: 'Priya',
+      last_name: 'Sharma',
+      work_email: 'priya@demo.test',
+      country: 'India',
+      currency: 'INR',
+      job_title: 'Product Manager',
+      start_date: '2026-02-01',
+      status: 'active' as const,
+      department: { id: 10, name: 'Product' },
+      manager: null,
+    }
+    vi.mocked(getEmployee).mockResolvedValue(employee)
+    vi.mocked(listEmployees).mockResolvedValue({
+      data: [
+        employee,
+        {
+          id: 9,
+          employee_id: 'EMP100',
+          first_name: 'Arjun',
+          last_name: 'Patel',
+          work_email: 'arjun@demo.test',
+          country: 'India',
+          currency: 'INR',
+          job_title: 'Engineering Manager',
+          start_date: '2025-01-01',
+          status: 'active',
+          department: { id: 10, name: 'Product' },
+          manager: null,
+        },
+      ],
+      meta: { page: 1, per_page: 100, total: 2 },
+    })
+    vi.mocked(updateEmployeeManager).mockRejectedValue(
+      new Error('Manager creates a reporting cycle'),
+    )
+
+    renderProfile('2')
+
+    await screen.findByRole('option', { name: 'Arjun Patel (EMP100)' })
+    await userEvent.selectOptions(screen.getByRole('combobox', { name: 'Manager' }), '9')
+    await userEvent.click(screen.getByRole('button', { name: 'Save manager' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'Manager creates a reporting cycle',
+    )
+    expect(screen.getByRole('heading', { name: 'Priya Sharma' })).toBeInTheDocument()
   })
 
   it('displays error alert when access is denied or profile fails to load', async () => {

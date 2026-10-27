@@ -26,7 +26,7 @@ export default function EmployeesPage() {
           <thead>
             <tr className="border-b bg-muted/50 text-left">
               <th className="p-2">ID</th><th className="p-2">Name</th><th className="p-2">Email</th>
-              <th className="p-2">Department</th><th className="p-2">Status</th>
+              <th className="p-2">Department</th><th className="p-2">Manager</th><th className="p-2">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -36,6 +36,7 @@ export default function EmployeesPage() {
                 <td className="p-2"><Link to={`/employees/${emp.id}`} className="underline">{emp.first_name} {emp.last_name}</Link></td>
                 <td className="p-2">{emp.work_email}</td>
                 <td className="p-2">{emp.department.name}</td>
+                <td className="p-2">{emp.manager?.name ?? '—'}</td>
                 <td className="p-2">{emp.status}</td>
               </tr>
             ))}

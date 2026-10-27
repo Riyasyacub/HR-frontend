@@ -9,6 +9,7 @@ import {
   signOut as signOutRequest,
   type AuthSession,
 } from './api/auth'
+import { getTeam } from './api/employees'
 import {
   createDepartment,
   deactivateDepartment,
@@ -20,6 +21,14 @@ import {
 } from './api/settings'
 import { AuthProvider } from './auth/AuthContext'
 import App from './App'
+
+vi.mock('./api/employees', () => ({
+  createEmployee: vi.fn(),
+  getEmployee: vi.fn(),
+  getTeam: vi.fn(),
+  listEmployees: vi.fn(),
+  updateEmployeeManager: vi.fn(),
+}))
 
 vi.mock('./api/settings', () => ({
   createDepartment: vi.fn(),
@@ -67,6 +76,20 @@ const employeeSession: AuthSession = {
   },
 }
 
+const managerSession: AuthSession = {
+  access_token: 'manager-token',
+  token_type: 'Bearer',
+  expires_in: 900,
+  user: {
+    id: 3,
+    name: 'Arjun',
+    email: 'arjun@demo.test',
+    role: 'standard_employee',
+    country: 'India',
+    is_manager: true,
+  },
+}
+
 function LocationProbe() {
   return <p data-testid="location">{useLocation().pathname}</p>
 }
@@ -107,6 +130,7 @@ beforeEach(() => {
   vi.mocked(deactivateDepartment).mockReset()
   vi.mocked(renameDepartment).mockReset()
   vi.mocked(updateLeaveType).mockReset()
+  vi.mocked(getTeam).mockResolvedValue([])
 })
 
 describe('App', () => {
@@ -138,6 +162,39 @@ describe('App', () => {
     renderApp('/sign-in')
 
     await submitCredentials('priya@demo.test')
+
+    expect(
+      await screen.findByRole('heading', { name: 'Employee dashboard' }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('location')).toHaveTextContent('/dashboard')
+  })
+
+  it('lands a manager on the manager dashboard with a team link', async () => {
+    vi.mocked(signInRequest).mockResolvedValue(managerSession)
+    renderApp('/sign-in')
+
+    await submitCredentials('arjun@demo.test')
+
+    expect(
+      await screen.findByRole('heading', { name: 'Manager dashboard' }),
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'My team' })).toHaveAttribute('href', '/team')
+  })
+
+  it('allows a manager to open the team page', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(managerSession)
+    renderApp('/team')
+
+    expect(
+      await screen.findByRole('heading', { name: 'My team' }),
+    ).toBeInTheDocument()
+    expect(screen.getByTestId('location')).toHaveTextContent('/team')
+    expect(getTeam).toHaveBeenCalledWith('manager-token')
+  })
+
+  it('redirects a non-manager away from the team page', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(employeeSession)
+    renderApp('/team')
 
     expect(
       await screen.findByRole('heading', { name: 'Employee dashboard' }),

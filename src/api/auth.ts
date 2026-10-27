@@ -1,4 +1,4 @@
-export type User = { id: number; name: string; email: string; role: 'HR' | 'standard_employee'; country: string; employee_id?: number | null }
+export type User = { id: number; name: string; email: string; role: 'HR' | 'standard_employee'; country: string; employee_id?: number | null; is_manager?: boolean }
 export type AuthSession = { access_token: string; token_type: 'Bearer'; expires_in: number; user: User }
 
 export class ApiClientError extends Error {

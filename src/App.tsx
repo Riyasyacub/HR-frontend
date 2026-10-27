@@ -6,6 +6,7 @@ import EmployeesPage from './pages/EmployeesPage'
 import NewEmployeePage from './pages/NewEmployeePage'
 import SettingsPage from './pages/SettingsPage'
 import SignInPage from './pages/SignInPage'
+import TeamPage from './pages/TeamPage'
 
 function RequireAuth() {
   const { status } = useAuth()
@@ -19,6 +20,11 @@ function RequireHr() {
   return session?.user.role === 'HR' ? <Outlet /> : <Navigate to="/dashboard" replace />
 }
 
+function RequireManager() {
+  const { session } = useAuth()
+  return session?.user.is_manager ? <Outlet /> : <Navigate to="/dashboard" replace />
+}
+
 export default function App() {
   return (
     <Routes>
@@ -26,6 +32,9 @@ export default function App() {
       <Route element={<RequireAuth />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/employees/:id" element={<EmployeeProfilePage />} />
+        <Route element={<RequireManager />}>
+          <Route path="/team" element={<TeamPage />} />
+        </Route>
         <Route element={<RequireHr />}>
           <Route path="/employees" element={<EmployeesPage />} />
           <Route path="/employees/new" element={<NewEmployeePage />} />

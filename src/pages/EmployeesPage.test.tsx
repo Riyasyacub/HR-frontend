@@ -56,9 +56,24 @@ describe('EmployeesPage', () => {
           start_date: '2026-01-01',
           status: 'active',
           department: { id: 10, name: 'Engineering' },
+          manager: { id: 9, employee_id: 'EMP100', name: 'Arjun Patel' },
+        },
+        {
+          id: 2,
+          employee_id: 'EMP102',
+          first_name: 'Priya',
+          last_name: 'Sharma',
+          work_email: 'priya@demo.test',
+          country: 'India',
+          currency: 'INR',
+          job_title: 'Product Manager',
+          start_date: '2026-02-01',
+          status: 'active',
+          department: { id: 10, name: 'Engineering' },
+          manager: null,
         },
       ],
-      meta: { page: 1, per_page: 25, total: 1 },
+      meta: { page: 1, per_page: 25, total: 2 },
     })
 
     renderEmployeesPage()
@@ -67,8 +82,9 @@ describe('EmployeesPage', () => {
     expect(screen.getByText('EMP101')).toBeInTheDocument()
     expect(screen.getByText('Ravi Kumar')).toBeInTheDocument()
     expect(screen.getByText('ravi@demo.test')).toBeInTheDocument()
-    expect(screen.getByText('Engineering')).toBeInTheDocument()
-    expect(screen.getByText('active')).toBeInTheDocument()
+    expect(screen.getAllByText('Engineering')).toHaveLength(2)
+    expect(screen.getByText('Arjun Patel')).toBeInTheDocument()
+    expect(screen.getByText('—')).toBeInTheDocument()
     expect(listEmployees).toHaveBeenCalledWith('hr-token')
   })
 
