@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { getEmployee, listEmployees, updateEmployeeManager, updateSelfContact, type EmployeeDetail, type EmployeeSummary } from '../api/employees'
 import { useAuth } from '../auth/AuthContext'
 import LeaveBalances from '../components/LeaveBalances'
@@ -78,6 +78,7 @@ export default function EmployeeProfilePage() {
         <h1 className="text-2xl font-semibold">{employee.first_name} {employee.last_name}</h1>
         <span className="text-xs border px-2 py-0.5 rounded">{employee.status}</span>
       </div>
+      {(session?.user.role === 'HR' || session?.user.is_manager) && <Link to={`/org-chart?focus=${employee.id}`} className="text-sm underline">View in org chart</Link>}
       <div className="grid grid-cols-2 gap-2 text-sm border p-4 rounded">
         <div><span className="text-muted-foreground">ID:</span> {employee.employee_id}</div>
         <div><span className="text-muted-foreground">Title:</span> {employee.job_title}</div>

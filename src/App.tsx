@@ -5,6 +5,7 @@ import EmployeeImportPage from './pages/EmployeeImportPage'
 import EmployeeProfilePage from './pages/EmployeeProfilePage'
 import EmployeesPage from './pages/EmployeesPage'
 import NewEmployeePage from './pages/NewEmployeePage'
+import OrgChartPage from './pages/OrgChartPage'
 import LeaveRecordsPage from './pages/LeaveRecordsPage'
 import LeaveUploadPage from './pages/LeaveUploadPage'
 import PayrollRunPage from './pages/PayrollRunPage'
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/leave-records" element={<LeaveRecordsPage />} />
         <Route element={<RequireReportAccess />}>
           <Route path="/reports" element={<ReportsPage />} />
+          <Route path="/org-chart" element={<OrgChartPage />} />
         </Route>
         <Route element={<RequireManager />}>
           <Route path="/team" element={<TeamPage />} />

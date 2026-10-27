@@ -46,6 +46,8 @@ vi.mock('./api/reports', () => ({ getHeadcount: vi.fn(), getJoiners: vi.fn(), do
 
 vi.mock('./api/payroll', () => ({ listPayrollRuns: vi.fn() }))
 
+vi.mock('./api/orgChart', () => ({ getOrgChart: vi.fn().mockResolvedValue([]), getOrgChartPath: vi.fn() }))
+
 vi.mock('./api/auth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./api/auth')>()
   return {
@@ -242,6 +244,19 @@ describe('App', () => {
 
     vi.mocked(refreshAccessToken).mockResolvedValue(employeeSession)
     renderApp('/employee-import')
+    expect(await screen.findByRole('heading', { name: 'Employee dashboard' })).toBeInTheDocument()
+  })
+
+  it('links HR and managers to the org chart and redirects an employee', async () => {
+    for (const session of [hrSession, managerSession]) {
+      vi.mocked(refreshAccessToken).mockResolvedValue(session)
+      const { unmount } = renderApp('/dashboard')
+      expect(await screen.findByRole('link', { name: 'Org chart' })).toHaveAttribute('href', '/org-chart')
+      unmount()
+    }
+
+    vi.mocked(refreshAccessToken).mockResolvedValue(employeeSession)
+    renderApp('/org-chart')
     expect(await screen.findByRole('heading', { name: 'Employee dashboard' })).toBeInTheDocument()
   })
 

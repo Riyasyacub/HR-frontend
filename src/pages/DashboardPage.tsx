@@ -17,6 +17,7 @@ export default function DashboardPage() {
       <div className="mt-4">
         <Link to="/leave-records" className="text-sm underline">Leave records</Link>
         {(isHr || isManager) && <Link to="/reports" className="text-sm underline ml-4">Reports</Link>}
+        {(isHr || isManager) && <Link to="/org-chart" className="text-sm underline ml-4">Org chart</Link>}
       </div>
       {isHr && (
         <div className="mt-4">

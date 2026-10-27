@@ -349,4 +349,18 @@ describe('EmployeeProfilePage', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('You are not authorized to perform this action.')
   })
+
+  it('links HR to the org chart focused on the employee, but not a plain employee', async () => {
+    const employee = { id: 1, employee_id: 'EMP101', first_name: 'Priya', last_name: 'Sharma', work_email: 'priya@demo.test', country: 'India',
+      currency: 'INR', job_title: 'Engineer', start_date: '2026-01-01', status: 'active' as const, department: { id: 10, name: 'Product' }, manager: null }
+    vi.mocked(getEmployee).mockResolvedValue(employee)
+    const { unmount } = renderProfile('1')
+    await screen.findByRole('heading', { name: 'Priya Sharma' })
+    expect(screen.queryByRole('link', { name: 'View in org chart' })).not.toBeInTheDocument()
+    unmount()
+
+    useHrSession()
+    renderProfile('1')
+    expect(await screen.findByRole('link', { name: 'View in org chart' })).toHaveAttribute('href', '/org-chart?focus=1')
+  })
 })
