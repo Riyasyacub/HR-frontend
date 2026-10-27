@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { listPayrollLines, type PayrollLinePage } from '../api/payroll'
-import { Button } from './ui/button'
+import Pager from './Pager'
 
 const HEADINGS = ['Employee', 'Currency', 'Gross', 'Working days', 'Unpaid days', 'Unpaid deduction', 'Total', 'Issues']
 
@@ -33,11 +33,7 @@ export default function PayrollLinesTable({ accessToken, runId }: { accessToken:
           ))}
         </tbody>
       </table>
-      <div className="flex items-center gap-2">
-        <Button variant="outline" disabled={page <= 1} onClick={() => setPage(page - 1)}>Previous</Button>
-        <span>Page {page} of {pageCount}</span>
-        <Button variant="outline" disabled={page >= pageCount} onClick={() => setPage(page + 1)}>Next</Button>
-      </div>
+      <Pager page={page} pageCount={pageCount} onPage={setPage} />
     </section>
   )
 }

@@ -8,6 +8,7 @@ import LeaveRecordsPage from './pages/LeaveRecordsPage'
 import LeaveUploadPage from './pages/LeaveUploadPage'
 import PayrollRunPage from './pages/PayrollRunPage'
 import PayrollRunsPage from './pages/PayrollRunsPage'
+import ReportsPage from './pages/ReportsPage'
 import SettingsPage from './pages/SettingsPage'
 import SignInPage from './pages/SignInPage'
 import TeamPage from './pages/TeamPage'
@@ -24,6 +25,11 @@ function RequireHr() {
   return session?.user.role === 'HR' ? <Outlet /> : <Navigate to="/dashboard" replace />
 }
 
+function RequireReportAccess() {
+  const { session } = useAuth()
+  return session?.user.role === 'HR' || session?.user.is_manager ? <Outlet /> : <Navigate to="/dashboard" replace />
+}
+
 function RequireManager() {
   const { session } = useAuth()
   return session?.user.is_manager ? <Outlet /> : <Navigate to="/dashboard" replace />
@@ -37,6 +43,9 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/employees/:id" element={<EmployeeProfilePage />} />
         <Route path="/leave-records" element={<LeaveRecordsPage />} />
+        <Route element={<RequireReportAccess />}>
+          <Route path="/reports" element={<ReportsPage />} />
+        </Route>
         <Route element={<RequireManager />}>
           <Route path="/team" element={<TeamPage />} />
         </Route>

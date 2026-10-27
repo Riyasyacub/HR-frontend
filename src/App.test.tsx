@@ -19,6 +19,8 @@ import {
   renameDepartment,
   updateLeaveType,
 } from './api/settings'
+import { listPayrollRuns } from './api/payroll'
+import { getHeadcount, getJoiners } from './api/reports'
 import { AuthProvider } from './auth/AuthContext'
 import App from './App'
 
@@ -39,6 +41,10 @@ vi.mock('./api/settings', () => ({
   renameDepartment: vi.fn(),
   updateLeaveType: vi.fn(),
 }))
+
+vi.mock('./api/reports', () => ({ getHeadcount: vi.fn(), getJoiners: vi.fn(), downloadReport: vi.fn() }))
+
+vi.mock('./api/payroll', () => ({ listPayrollRuns: vi.fn() }))
 
 vi.mock('./api/auth', async (importOriginal) => {
   const actual = await importOriginal<typeof import('./api/auth')>()
@@ -131,6 +137,9 @@ beforeEach(() => {
   vi.mocked(renameDepartment).mockReset()
   vi.mocked(updateLeaveType).mockReset()
   vi.mocked(getTeam).mockResolvedValue([])
+  vi.mocked(getHeadcount).mockResolvedValue({ data: [], meta: { group_by: 'country', headcount: 0, onboarding: 0 } })
+  vi.mocked(getJoiners).mockResolvedValue({ data: [], meta: { page: 1, per_page: 1, total: 0 } })
+  vi.mocked(listPayrollRuns).mockResolvedValue({ data: [], meta: { page: 1, per_page: 25, total: 0 } })
 })
 
 describe('App', () => {
@@ -200,6 +209,29 @@ describe('App', () => {
       await screen.findByRole('heading', { name: 'Employee dashboard' }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/dashboard')
+  })
+
+  it('lets HR and managers open reports from their dashboards', async () => {
+    for (const session of [hrSession, managerSession]) {
+      vi.mocked(refreshAccessToken).mockResolvedValue(session)
+      const { unmount } = renderApp('/dashboard')
+
+      await userEvent.click(await screen.findByRole('link', { name: 'Reports' }))
+
+      expect(await screen.findByRole('heading', { name: 'Reports' })).toBeInTheDocument()
+      expect(screen.getByTestId('location')).toHaveTextContent('/reports')
+      unmount()
+    }
+  })
+
+  it('redirects an employee without reports away from reports', async () => {
+    vi.mocked(refreshAccessToken).mockResolvedValue(employeeSession)
+    renderApp('/reports')
+
+    expect(await screen.findByRole('heading', { name: 'Employee dashboard' })).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: 'Reports' })).not.toBeInTheDocument()
+    expect(screen.queryByText('Joiners this month')).not.toBeInTheDocument()
+    expect(getJoiners).not.toHaveBeenCalled()
   })
 
   it('shows the generic error for invalid credentials', async () => {
