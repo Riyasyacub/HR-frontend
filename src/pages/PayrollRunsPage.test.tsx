@@ -33,8 +33,8 @@ describe('PayrollRunsPage', () => {
 
     const link = await screen.findByRole('link', { name: '2026-10' })
     expect(link).toHaveAttribute('href', '/payroll/3')
-    expect(screen.getByText('draft')).toBeInTheDocument()
-    expect(screen.getByText('completed')).toBeInTheDocument()
+    expect(screen.getByText('draft')).toHaveAttribute('data-tone', 'warning')
+    expect(screen.getByText('completed')).toHaveAttribute('data-tone', 'success')
   })
 
   it('creates a run for the chosen month', async () => {

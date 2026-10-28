@@ -4,7 +4,7 @@ import HeadcountReport from '../components/reports/HeadcountReport'
 import JoinersReport from '../components/reports/JoinersReport'
 import LeaveReport from '../components/reports/LeaveReport'
 import PayrollReport from '../components/reports/PayrollReport'
-import { Button } from '../components/ui/button'
+import PageHeader from '../components/PageHeader'
 
 const TABS = { Headcount: HeadcountReport, Joiners: JoinersReport, Leave: LeaveReport, Payroll: PayrollReport }
 type Tab = keyof typeof TABS
@@ -17,11 +17,14 @@ export default function ReportsPage() {
   const Report = TABS[tab]
 
   return (
-    <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Reports</h1>
-      <nav className="flex gap-2">
-        {tabs.map((name) => <Button key={name} variant={name === tab ? 'default' : 'outline'} onClick={() => setTab(name)}>{name}</Button>)}
-      </nav>
+    <main className="mx-auto max-w-6xl space-y-4 p-6">
+      <PageHeader title="Reports" description="Filter, review, and download reports as Excel." />
+      <div role="tablist" aria-label="Reports" className="inline-flex rounded-lg bg-muted p-1">
+        {tabs.map((name) => (
+          <button key={name} type="button" role="tab" aria-selected={name === tab} onClick={() => setTab(name)}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium ${name === tab ? 'bg-card text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}>{name}</button>
+        ))}
+      </div>
       <Report accessToken={session.access_token} />
     </main>
   )

@@ -84,6 +84,8 @@ describe('TeamPage', () => {
       screen.getByRole('link', { name: 'Priya Sharma (EMP102)' }),
     ).toHaveAttribute('href', '/employees/10')
     expect(screen.getByText('Product Manager')).toBeInTheDocument()
+    expect(screen.getAllByRole('row')).toHaveLength(3)
+    expect(screen.getAllByText('active')[0]).toHaveAttribute('data-tone', 'success')
     expect(screen.getByText('Product')).toBeInTheDocument()
     expect(
       screen.getByRole('link', { name: 'Kavita Rao (EMP104)' }),

@@ -19,6 +19,13 @@ export type PayrollTotal = {
 }
 export type PayrollReport = { data: PayrollTotal[]; meta: { year: number } }
 
+export type TrendSeries<T> = { values: T[] }
+export type Trends = {
+  months: string[]; headcount: number[]; joiners: number[]
+  leave_days: (TrendSeries<number> & { leave_type: string })[]
+  payroll_totals: (TrendSeries<string> & { currency: string })[] | null
+}
+
 const auth = (accessToken: string) => ({ Authorization: `Bearer ${accessToken}` })
 const query = (params: ReportParams) => new URLSearchParams(Object.entries(params).filter(([, value]) => value !== '')).toString()
 
@@ -42,4 +49,9 @@ export function getLeaveReport(accessToken: string, params: ReportParams, page: 
 
 export function getPayrollReport(accessToken: string, params: ReportParams): Promise<PayrollReport> {
   return request<PayrollReport>(`/reports/payroll?${query(params)}`, { headers: auth(accessToken) })
+}
+
+export async function getTrends(accessToken: string, months = 12): Promise<Trends> {
+  const { data } = await request<{ data: Trends }>(`/reports/trends?months=${months}`, { headers: auth(accessToken) })
+  return data
 }

@@ -1,8 +1,11 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { createDepartment, deactivateDepartment, listCountries, listDepartments, listLeaveTypes, renameDepartment, updateLeaveType, type Country, type Department, type LeaveType } from '../api/settings'
 import { useAuth } from '../auth/AuthContext'
+import { Badge } from '../components/ui/badge'
 import { Button } from '../components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card'
 import { Input } from '../components/ui/input'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 
 export default function SettingsPage() {
   const { session } = useAuth()
@@ -85,61 +88,96 @@ export default function SettingsPage() {
   }
 
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-semibold">HR settings</h1>
-      <p className="mt-2 text-sm text-muted-foreground">HR-only configuration.</p>
-      {error && <p role="alert" className="mt-4 text-sm text-destructive">{error}</p>}
-      <section aria-labelledby="countries-heading" className="mt-6">
-        <h2 id="countries-heading" className="text-lg font-medium">Countries</h2>
-        <dl className="mt-3 grid max-w-md grid-cols-2 gap-2 text-sm">
-          {countries.map((country) => (
-            <div key={country.name} className="contents">
-              <dt>{country.name}</dt>
-              <dd>{country.currency}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
-      <section aria-labelledby="departments-heading" className="mt-8">
-        <h2 id="departments-heading" className="text-lg font-medium">Departments</h2>
-        <form onSubmit={addDepartment} className="mt-3 flex flex-wrap items-end gap-2">
-          <label className="text-sm">Department name<Input value={departmentName} onChange={(event) => setDepartmentName(event.target.value)} required /></label>
-          <label className="text-sm">Department code<Input value={departmentCode} onChange={(event) => setDepartmentCode(event.target.value)} required /></label>
-          <Button type="submit">Add department</Button>
-        </form>
-        {departmentError && <p role="alert" className="mt-3 text-sm text-destructive">{departmentError}</p>}
-        <ul className="mt-3 space-y-1 text-sm">
-          {departments.map((department) => (
-            <li key={department.id} className="flex items-center gap-2">
-              {editingDepartment?.id === department.id ? (
-                <form onSubmit={saveRename} className="flex items-center gap-2">
-                  <Input aria-label={`New name for ${department.name}`} value={editingName} onChange={(event) => setEditingName(event.target.value)} required />
-                  <Button type="submit" size="sm">Save</Button>
-                  <Button type="button" size="sm" variant="ghost" onClick={() => setEditingDepartment(null)}>Cancel</Button>
-                </form>
-              ) : (
-                <>
-                  <span>{department.name}</span> <span>({department.code})</span>
-                  {!department.active && <span className="ml-2 text-muted-foreground">Inactive</span>}
-                  {department.active && <Button type="button" size="sm" variant="ghost" aria-label={`Rename ${department.name}`} onClick={() => { setEditingDepartment(department); setEditingName(department.name) }}>Rename</Button>}
-                  {department.active && <Button type="button" size="sm" variant="ghost" aria-label={`Deactivate ${department.name}`} onClick={() => deactivate(department)}>Deactivate</Button>}
-                </>
-              )}
-            </li>
-          ))}
-        </ul>
-      </section>
-      <section aria-labelledby="leave-types-heading" className="mt-8">
-        <h2 id="leave-types-heading" className="text-lg font-medium">Leave types</h2>
-        <ul className="mt-3 space-y-2 text-sm">
-          {leaveTypes.map((leaveType) => (
-            <li key={leaveType.id} className="flex items-center gap-2">
-              <span>{leaveType.name}</span>
-              {leaveType.balance_tracked ? <form noValidate onSubmit={(event) => saveEntitlement(event, leaveType)} className="flex items-center gap-2"><label className="flex items-center gap-2">Default entitlement<Input type="number" min="0" step="1" name="entitlement" defaultValue={leaveType.default_entitlement ?? ''} aria-label={`Default entitlement for ${leaveType.name}`} required /></label><Button type="submit" size="sm">Save {leaveType.name}</Button></form> : <span className="text-muted-foreground">No entitlement</span>}
-            </li>
-          ))}
-        </ul>
-      </section>
+    <main className="mx-auto max-w-5xl space-y-6 p-6">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">HR settings</h1>
+        <p className="mt-1 text-sm text-muted-foreground">HR-only configuration.</p>
+      </div>
+      {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
+      <div className="grid gap-6 lg:grid-cols-[1fr_2fr]">
+        <Card role="region" aria-labelledby="countries-heading">
+          <CardHeader>
+            <CardTitle id="countries-heading" role="heading" aria-level={2}>Countries</CardTitle>
+            <CardDescription>Supported countries and their payroll currency (read-only).</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Table>
+              <TableHeader><TableRow><TableHead>Country</TableHead><TableHead>Currency</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {countries.map((country) => <TableRow key={country.name}><TableCell>{country.name}</TableCell><TableCell>{country.currency}</TableCell></TableRow>)}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+        <Card role="region" aria-labelledby="departments-heading">
+          <CardHeader>
+            <CardTitle id="departments-heading" role="heading" aria-level={2}>Departments</CardTitle>
+            <CardDescription>Add, rename, or deactivate departments.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <form onSubmit={addDepartment} className="grid gap-2 sm:grid-cols-[1fr_8rem_auto] sm:items-end">
+              <label className="space-y-1 text-sm">Department name<Input value={departmentName} onChange={(event) => setDepartmentName(event.target.value)} required /></label>
+              <label className="space-y-1 text-sm">Department code<Input value={departmentCode} onChange={(event) => setDepartmentCode(event.target.value)} required /></label>
+              <Button type="submit">Add department</Button>
+            </form>
+            {departmentError && <p role="alert" className="text-sm text-destructive">{departmentError}</p>}
+            <Table>
+              <TableHeader><TableRow><TableHead>Name</TableHead><TableHead>Code</TableHead><TableHead>Status</TableHead><TableHead className="text-right">Actions</TableHead></TableRow></TableHeader>
+              <TableBody>
+                {departments.map((department) => (
+                  <TableRow key={department.id}>
+                    {editingDepartment?.id === department.id ? (
+                      <TableCell colSpan={4}>
+                        <form onSubmit={saveRename} className="flex items-center gap-2">
+                          <Input aria-label={`New name for ${department.name}`} value={editingName} onChange={(event) => setEditingName(event.target.value)} required />
+                          <Button type="submit" size="sm">Save</Button>
+                          <Button type="button" size="sm" variant="ghost" onClick={() => setEditingDepartment(null)}>Cancel</Button>
+                        </form>
+                      </TableCell>
+                    ) : (
+                      <>
+                        <TableCell className="font-medium">{department.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{department.code}</TableCell>
+                        <TableCell>{department.active ? <Badge variant="secondary">Active</Badge> : <Badge variant="outline">Inactive</Badge>}</TableCell>
+                        <TableCell className="text-right">
+                          {department.active && <Button type="button" size="sm" variant="ghost" aria-label={`Rename ${department.name}`} onClick={() => { setEditingDepartment(department); setEditingName(department.name) }}>Rename</Button>}
+                          {department.active && <Button type="button" size="sm" variant="ghost" aria-label={`Deactivate ${department.name}`} onClick={() => deactivate(department)}>Deactivate</Button>}
+                        </TableCell>
+                      </>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+      <Card role="region" aria-labelledby="leave-types-heading">
+        <CardHeader>
+          <CardTitle id="leave-types-heading" role="heading" aria-level={2}>Leave types</CardTitle>
+          <CardDescription>Default yearly entitlement for balance-tracked leave.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader><TableRow><TableHead>Leave type</TableHead><TableHead>Default entitlement (days)</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {leaveTypes.map((leaveType) => (
+                <TableRow key={leaveType.id}>
+                  <TableCell className="font-medium">{leaveType.name}</TableCell>
+                  <TableCell>
+                    {leaveType.balance_tracked ? (
+                      <form noValidate onSubmit={(event) => saveEntitlement(event, leaveType)} className="flex items-center gap-2">
+                        <Input className="w-24" type="number" min="0" step="1" name="entitlement" defaultValue={leaveType.default_entitlement ?? ''} aria-label={`Default entitlement for ${leaveType.name}`} required />
+                        <Button type="submit" size="sm" variant="outline">Save {leaveType.name}</Button>
+                      </form>
+                    ) : <span className="text-muted-foreground">No entitlement</span>}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </main>
   )
 }

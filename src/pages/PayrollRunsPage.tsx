@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { createPayrollRun, listPayrollRuns, type PayrollRun } from '../api/payroll'
 import { useAuth } from '../auth/AuthContext'
 import { Button } from '../components/ui/button'
+import PageHeader from '../components/PageHeader'
+import StatusBadge from '../components/StatusBadge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
+import { Card, CardContent } from '../components/ui/card'
 
 const POLL_INTERVAL_MS = 2000
 
@@ -39,25 +43,31 @@ export default function PayrollRunsPage() {
   }
 
   return (
-    <main className="p-6 max-w-2xl space-y-4">
-      <h1 className="text-2xl font-semibold">Payroll</h1>
-      <form onSubmit={createRun} className="flex gap-2 items-center">
-        <input aria-label="Payroll month" type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="border rounded p-1.5 text-sm" />
-        <Button type="submit" disabled={!month}>Create run</Button>
-      </form>
+    <main className="mx-auto max-w-4xl space-y-4 p-6">
+      <PageHeader title="Payroll" description="Create a monthly run, review it, then generate and export." />
+      <Card>
+        <CardContent>
+          <form onSubmit={createRun} className="flex items-center gap-2">
+            <input aria-label="Payroll month" type="month" value={month} onChange={(e) => setMonth(e.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm" />
+            <Button type="submit" disabled={!month}>Create run</Button>
+          </form>
+        </CardContent>
+      </Card>
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
-      <table className="w-full text-sm text-left">
-        <thead><tr><th className="p-2">Month</th><th className="p-2">Status</th><th className="p-2">Calculation</th></tr></thead>
-        <tbody>
-          {runs.map((run) => (
-            <tr key={run.id} className="border-t">
-              <td className="p-2"><Link to={`/payroll/${run.id}`} className="underline">{run.month.slice(0, 7)}</Link></td>
-              <td className="p-2">{run.status}</td>
-              <td className="p-2">{run.calculation_status}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="rounded-xl border bg-card shadow-sm">
+        <Table>
+          <TableHeader><TableRow><TableHead>Month</TableHead><TableHead>Status</TableHead><TableHead>Calculation</TableHead></TableRow></TableHeader>
+          <TableBody>
+            {runs.map((run) => (
+              <TableRow key={run.id}>
+                <TableCell><Link to={`/payroll/${run.id}`} className="font-medium text-primary hover:underline">{run.month.slice(0, 7)}</Link></TableCell>
+                <TableCell><StatusBadge status={run.status} /></TableCell>
+                <TableCell><StatusBadge status={run.calculation_status} /></TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
     </main>
   )
 }

@@ -3,6 +3,7 @@ import { getHeadcount, type HeadcountReport as Report } from '../../api/reports'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import DownloadReportButton from './DownloadReportButton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 
 export default function HeadcountReport({ accessToken }: { accessToken: string }) {
   const [draft, setDraft] = useState({ group_by: 'country', country: '' })
@@ -35,13 +36,13 @@ export default function HeadcountReport({ accessToken }: { accessToken: string }
         <DownloadReportButton accessToken={accessToken} report="headcount" params={params} />
       </form>
       {error && <p role="alert" className="text-red-600">{error}</p>}
-      <table className="w-full text-left">
-        <thead><tr><th className="p-2">Group</th><th className="p-2">Headcount</th><th className="p-2">Onboarding</th></tr></thead>
-        <tbody>
-          {report?.data.map((row) => <tr key={row.group} className="border-t"><td className="p-2">{row.group}</td><td className="p-2">{row.headcount}</td><td className="p-2">{row.onboarding}</td></tr>)}
-          {report && <tr className="border-t font-semibold"><td className="p-2">Total</td><td className="p-2">{report.meta.headcount}</td><td className="p-2">{report.meta.onboarding}</td></tr>}
-        </tbody>
-      </table>
+      <div className="rounded-xl border bg-card shadow-sm"><Table>
+        <TableHeader><TableRow><TableHead>Group</TableHead><TableHead>Headcount</TableHead></TableRow></TableHeader>
+        <TableBody>
+          {report?.data.map((row) => <TableRow key={row.group}><TableCell>{row.group}</TableCell><TableCell>{row.headcount}</TableCell></TableRow>)}
+          {report && <TableRow className="font-semibold"><TableCell>Total</TableCell><TableCell>{report.meta.headcount}</TableCell></TableRow>}
+        </TableBody>
+      </Table></div>
     </section>
   )
 }

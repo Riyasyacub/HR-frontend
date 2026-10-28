@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { downloadReport, getHeadcount, getJoiners, getLeaveReport, getPayrollReport } from './reports'
+import { downloadReport, getHeadcount, getJoiners, getLeaveReport, getPayrollReport, getTrends } from './reports'
 
 afterEach(() => vi.unstubAllGlobals())
 
@@ -49,5 +49,15 @@ describe('reports api', () => {
     await getPayrollReport('token', { year: '2026', country: 'USA' })
 
     expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/reports/payroll?year=2026&country=USA')
+  })
+
+  it('requests twelve months of trends', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, status: 200, json: async () => ({ data: { months: [] } }) })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await getTrends('token')
+
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/reports/trends?months=12')
+    expect(new Headers(fetchMock.mock.calls[0][1].headers).get('Authorization')).toBe('Bearer token')
   })
 })

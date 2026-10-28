@@ -4,7 +4,9 @@ import { getPayrollRun, recalculatePayrollRun, type PayrollRunDetail } from '../
 import { useAuth } from '../auth/AuthContext'
 import PayrollLinesTable from '../components/PayrollLinesTable'
 import PayrollRunActions from '../components/PayrollRunActions'
+import PageHeader from '../components/PageHeader'
 import { Button } from '../components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 
 const POLL_INTERVAL_MS = 2000
 
@@ -41,27 +43,24 @@ export default function PayrollRunPage() {
   const issues = run.blocking_issues_count
 
   return (
-    <main className="p-6 max-w-3xl space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-semibold">Payroll {run.month.slice(0, 7)}</h1>
-        {run.status === 'draft' && <Button variant="outline" disabled={calculating} onClick={() => void recalculate()}>Recalculate</Button>}
-      </div>
-      <p className="text-sm text-muted-foreground">{run.status} · {run.calculation_status}</p>
-      {session && <PayrollRunActions accessToken={session.access_token} run={run} blockingIssues={issues} onChange={(updated) => setRun({ ...run, ...updated })} />}
+    <main className="mx-auto max-w-5xl space-y-4 p-6">
+      <PageHeader title={`Payroll ${run.month.slice(0, 7)}`} description={`${run.status} · ${run.calculation_status}`}
+        actions={run.status === 'draft' && <Button variant="outline" disabled={calculating} onClick={() => void recalculate()}>Recalculate</Button>} />
+      {session && <div className="rounded-xl border bg-card p-4 shadow-sm"><PayrollRunActions accessToken={session.access_token} run={run} blockingIssues={issues} onChange={(updated) => setRun({ ...run, ...updated })} /></div>}
       {(error || run.calculation_status === 'failed') && <p role="alert" className="text-sm text-red-600">{error || `Calculation failed: ${run.calculation_error}`}</p>}
       <p className={issues ? 'text-sm text-red-600' : 'text-sm'}>
         {issues ? `${issues} ${issues === 1 ? 'employee has' : 'employees have'} blocking issues and must be fixed before export.` : 'No blocking issues.'}
       </p>
-      <table className="w-full text-sm text-left">
-        <thead><tr><th className="p-2">Country</th><th className="p-2">Currency</th><th className="p-2">Employees</th><th className="p-2">Gross</th><th className="p-2">Unpaid deduction</th><th className="p-2">Total</th></tr></thead>
-        <tbody>
+      <div className="rounded-xl border bg-card shadow-sm"><Table>
+        <TableHeader><TableRow><TableHead>Country</TableHead><TableHead>Currency</TableHead><TableHead>Employees</TableHead><TableHead>Gross</TableHead><TableHead>Unpaid deduction</TableHead><TableHead>Total</TableHead></TableRow></TableHeader>
+        <TableBody>
           {run.totals.map((total) => (
-            <tr key={`${total.country}-${total.currency}`} className="border-t">
-              {[total.country, total.currency, total.employees, total.monthly_gross, total.unpaid_deduction, total.total].map((value, index) => <td key={index} className="p-2">{value}</td>)}
-            </tr>
+            <TableRow key={`${total.country}-${total.currency}`}>
+              {[total.country, total.currency, total.employees, total.monthly_gross, total.unpaid_deduction, total.total].map((value, index) => <TableCell key={index}>{value}</TableCell>)}
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table></div>
       {session && run.calculation_status === 'completed' && <PayrollLinesTable accessToken={session.access_token} runId={id} />}
     </main>
   )

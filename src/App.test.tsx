@@ -42,7 +42,10 @@ vi.mock('./api/settings', () => ({
   updateLeaveType: vi.fn(),
 }))
 
-vi.mock('./api/reports', () => ({ getHeadcount: vi.fn(), getJoiners: vi.fn(), downloadReport: vi.fn() }))
+vi.mock('./api/reports', () => ({
+  getHeadcount: vi.fn(), getJoiners: vi.fn(), downloadReport: vi.fn(),
+  getTrends: vi.fn().mockResolvedValue({ months: [], headcount: [], joiners: [], leave_days: [], payroll_totals: null }),
+}))
 
 vi.mock('./api/payroll', () => ({ listPayrollRuns: vi.fn() }))
 
@@ -153,6 +156,8 @@ describe('App', () => {
       await screen.findByRole('heading', { name: 'Sign in' }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/sign-in')
+    expect(screen.getByText('◆ Incubyte HR')).toBeInTheDocument()
+    expect(screen.getByText('Sign in with your work email')).toBeInTheDocument()
   })
 
   it('lands an HR user on the HR dashboard', async () => {
@@ -178,6 +183,7 @@ describe('App', () => {
       await screen.findByRole('heading', { name: 'Employee dashboard' }),
     ).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/dashboard')
+    expect(screen.getByText('Welcome back, Priya')).toBeInTheDocument()
   })
 
   it('lands a manager on the manager dashboard with a team link', async () => {
@@ -333,7 +339,7 @@ describe('App', () => {
     })
 
     expect(await within(departments).findByText('Engineering')).toBeInTheDocument()
-    expect(within(departments).getByText('(ENG)')).toBeInTheDocument()
+    expect(within(departments).getByText('ENG')).toBeInTheDocument()
     expect(within(departments).getByText('Sales')).toBeInTheDocument()
     expect(within(departments).getByText('Inactive')).toBeInTheDocument()
   })
@@ -360,7 +366,7 @@ describe('App', () => {
       'ENG',
     )
     expect(await screen.findByText('Engineering')).toBeInTheDocument()
-    expect(screen.getByText('(ENG)')).toBeInTheDocument()
+    expect(screen.getByRole('cell', { name: 'ENG' })).toBeInTheDocument()
   })
 
   it('shows a duplicate department error without adding a row', async () => {

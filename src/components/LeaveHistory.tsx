@@ -10,7 +10,7 @@ export default function LeaveHistory({ accessToken, employeeId }: { accessToken:
   }, [accessToken, employeeId])
 
   return (
-    <div className="border p-4 rounded text-sm space-y-2">
+    <div className="space-y-2 rounded-xl border bg-card p-5 text-sm shadow-sm">
       <h2 className="font-semibold">Leave history</h2>
       {error && <p role="alert" className="text-red-600">{error}</p>}
       {records?.length === 0 && <p className="text-xs text-muted-foreground">No leave taken.</p>}

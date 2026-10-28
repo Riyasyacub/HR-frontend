@@ -25,9 +25,13 @@ export default function SignInPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-muted/40 p-6">
-      <form className="w-full max-w-sm space-y-4 rounded-xl border bg-background p-6 shadow-sm" onSubmit={handleSubmit}>
-        <h1 className="text-2xl font-semibold">Sign in</h1>
+    <main className="flex min-h-screen items-center justify-center bg-gradient-to-br from-indigo-50 via-background to-slate-100 p-6">
+      <form className="w-full max-w-sm space-y-4 rounded-xl border bg-card p-8 shadow-md" onSubmit={handleSubmit}>
+        <p className="text-lg font-semibold text-primary">◆ Incubyte HR</p>
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Sign in with your work email</p>
+        </div>
         <label htmlFor="email" className="text-sm font-medium">Email</label>
         <Input id="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required />
         <label htmlFor="password" className="text-sm font-medium">Password</label>

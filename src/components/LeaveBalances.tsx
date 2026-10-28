@@ -10,7 +10,7 @@ export default function LeaveBalances({ accessToken, employeeId }: { accessToken
   }, [accessToken, employeeId])
 
   return (
-    <div className="border p-4 rounded text-sm space-y-1">
+    <div className="space-y-1 rounded-xl border bg-card p-5 text-sm shadow-sm">
       <h2 className="font-semibold">Leave balances</h2>
       {error && <p role="alert" className="text-red-600">{error}</p>}
       {balances.map((balance) => (

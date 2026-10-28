@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { listPayrollLines, type PayrollLinePage } from '../api/payroll'
 import Pager from './Pager'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table'
 
 const HEADINGS = ['Employee', 'Currency', 'Gross', 'Working days', 'Unpaid days', 'Unpaid deduction', 'Total', 'Issues']
 
@@ -22,17 +23,17 @@ export default function PayrollLinesTable({ accessToken, runId }: { accessToken:
         Issues only
       </label>
       {error && <p role="alert" className="text-red-600">{error}</p>}
-      <table className="w-full text-left">
-        <thead><tr>{HEADINGS.map((heading) => <th key={heading} className="p-2">{heading}</th>)}</tr></thead>
-        <tbody>
+      <div className="rounded-xl border bg-card shadow-sm"><Table>
+        <TableHeader><TableRow>{HEADINGS.map((heading) => <TableHead key={heading}>{heading}</TableHead>)}</TableRow></TableHeader>
+        <TableBody>
           {lines?.data.map((line) => (
-            <tr key={line.id} className="border-t">
+            <TableRow key={line.id}>
               {[`${line.employee.name} (${line.employee.employee_id})`, line.currency, line.monthly_gross, line.working_days, line.unpaid_days,
-                line.unpaid_deduction, line.total, line.blocking_issues.join(', ')].map((value, index) => <td key={index} className="p-2">{value}</td>)}
-            </tr>
+                line.unpaid_deduction, line.total, line.blocking_issues.join(', ')].map((value, index) => <TableCell key={index}>{value}</TableCell>)}
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table></div>
       <Pager page={page} pageCount={pageCount} onPage={setPage} />
     </section>
   )

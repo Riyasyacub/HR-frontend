@@ -26,21 +26,23 @@ describe('ReportsPage', () => {
 
     expect(screen.getByRole('heading', { name: 'Reports' })).toBeInTheDocument()
     expect(screen.getByText('headcount report')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Joiners' }))
+    expect(screen.getByRole('tab', { name: 'Headcount' })).toHaveAttribute('aria-selected', 'true')
+    await userEvent.click(screen.getByRole('tab', { name: 'Joiners' }))
+    expect(screen.getByRole('tab', { name: 'Joiners' })).toHaveAttribute('aria-selected', 'true')
     expect(screen.getByText('joiners report')).toBeInTheDocument()
-    await userEvent.click(screen.getByRole('button', { name: 'Leave' }))
+    await userEvent.click(screen.getByRole('tab', { name: 'Leave' }))
     expect(screen.getByText('leave report')).toBeInTheDocument()
   })
 
   it('offers the payroll tab to HR only', async () => {
     signInAs('HR')
     const { unmount } = render(<ReportsPage />)
-    await userEvent.click(screen.getByRole('button', { name: 'Payroll' }))
+    await userEvent.click(screen.getByRole('tab', { name: 'Payroll' }))
     expect(screen.getByText('payroll report')).toBeInTheDocument()
     unmount()
 
     signInAs('standard_employee', true)
     render(<ReportsPage />)
-    expect(screen.queryByRole('button', { name: 'Payroll' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Payroll' })).not.toBeInTheDocument()
   })
 })

@@ -32,7 +32,7 @@ describe('LeaveRecordsPage', () => {
     expect(screen.getByText('2026-10-28')).toBeInTheDocument()
     expect(screen.getByText('Unpaid')).toBeInTheDocument()
     expect(screen.getByText('Personal work')).toBeInTheDocument()
-    expect(screen.getByText('Payroll deduction')).toBeInTheDocument()
+    expect(screen.getByText('Payroll deduction')).toHaveAttribute('data-tone', 'warning')
     expect(listLeaveRecords).toHaveBeenCalledWith('token', '')
   })
 

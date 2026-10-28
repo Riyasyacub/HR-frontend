@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { downloadEmployeeTemplate, getEmployeeImport, uploadEmployeeFile, type EmployeeImport, type EmployeeImportMode, type ErrorsMeta } from '../api/employeeImports'
 import { useAuth } from '../auth/AuthContext'
 import Pager from '../components/Pager'
+import PageHeader from '../components/PageHeader'
 import { Button } from '../components/ui/button'
 
 const POLL_INTERVAL_MS = 2000
@@ -57,8 +58,9 @@ export default function EmployeeImportPage() {
   }
 
   return (
-    <main className="p-6 max-w-2xl space-y-4">
-      <h1 className="text-2xl font-semibold">Employee import</h1>
+    <main className="mx-auto max-w-3xl space-y-4 p-6">
+      <PageHeader title="Employee import" description="Create employees in bulk, or update compensation and managers, from one Excel sheet." />
+      <div className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
       <Button variant="outline" onClick={() => void downloadTemplate().catch(() => setError('Could not download the template.'))}>Download template</Button>
       <fieldset className="flex gap-4 text-sm">
         {([['create', 'Create employees'], ['update', 'Update existing employees']] as const).map(([value, label]) => (
@@ -70,10 +72,11 @@ export default function EmployeeImportPage() {
         <input aria-label="Employee Excel file" type="file" accept=".xlsx" onChange={(e) => setFile(e.target.files?.[0] ?? null)} className="text-sm" />
         <Button type="submit" disabled={!file || pending}>Upload</Button>
       </form>
+      </div>
       {pending && <p className="text-sm text-muted-foreground">Processing…</p>}
       {elapsedSeconds !== null && <p className="text-sm">Finished in {elapsedSeconds} s</p>}
       {employeeImport?.status === 'completed' && (
-        <div className="border p-4 rounded text-sm space-y-1">
+        <div className="space-y-1 rounded-xl border bg-card p-5 text-sm shadow-sm">
           <p>Imported {employeeImport.imported_rows} of {employeeImport.total_rows} rows.</p>
           {errorsMeta && errorsMeta.row_errors_total > 0 && <p>{errorsMeta.row_errors_total} rows with errors</p>}
           {employeeImport.row_errors.map((rowError) => <p key={rowError.line} className="text-red-600">Line {rowError.line}: {rowError.errors.join(', ')}</p>)}

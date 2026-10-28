@@ -6,6 +6,7 @@ import { Input } from '../ui/input'
 import { currentMonthPeriod } from '../../lib/period'
 import Pager from '../Pager'
 import DownloadReportButton from './DownloadReportButton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 
 export default function JoinersReport({ accessToken }: { accessToken: string }) {
   const [draft, setDraft] = useState(() => ({ ...currentMonthPeriod(), country: '' }))
@@ -38,17 +39,17 @@ export default function JoinersReport({ accessToken }: { accessToken: string }) 
         <DownloadReportButton accessToken={accessToken} report="joiners" params={params} />
       </form>
       {error && <p role="alert" className="text-red-600">{error}</p>}
-      <table className="w-full text-left">
-        <thead><tr>{['Employee ID', 'Name', 'Country', 'Department', 'Start date'].map((heading) => <th key={heading} className="p-2">{heading}</th>)}</tr></thead>
-        <tbody>
+      <div className="rounded-xl border bg-card shadow-sm"><Table>
+        <TableHeader><TableRow>{['Employee ID', 'Name', 'Country', 'Department', 'Start date'].map((heading) => <TableHead key={heading}>{heading}</TableHead>)}</TableRow></TableHeader>
+        <TableBody>
           {joiners?.data.map((joiner) => (
-            <tr key={joiner.id} className="border-t">
-              <td className="p-2">{joiner.employee_id}</td><td className="p-2"><Link className="underline" to={`/employees/${joiner.id}`}>{joiner.name}</Link></td>
-              <td className="p-2">{joiner.country}</td><td className="p-2">{joiner.department}</td><td className="p-2">{joiner.start_date}</td>
-            </tr>
+            <TableRow key={joiner.id}>
+              <TableCell>{joiner.employee_id}</TableCell><TableCell><Link className="font-medium text-primary hover:underline" to={`/employees/${joiner.id}`}>{joiner.name}</Link></TableCell>
+              <TableCell>{joiner.country}</TableCell><TableCell>{joiner.department}</TableCell><TableCell>{joiner.start_date}</TableCell>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table></div>
       <Pager page={page} pageCount={pageCount} onPage={setPage} />
     </section>
   )

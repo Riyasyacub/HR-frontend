@@ -100,6 +100,7 @@ describe('EmployeeProfilePage', () => {
 
     expect(await screen.findByRole('heading', { name: 'Priya Sharma' })).toBeInTheDocument()
     expect(screen.getByText('EMP101')).toBeInTheDocument()
+    expect(screen.getByText('active')).toHaveAttribute('data-tone', 'success')
     expect(screen.getByText('Product Manager')).toBeInTheDocument()
     expect(screen.getByText('Product')).toBeInTheDocument()
     expect(screen.getByTestId('current-manager')).toHaveTextContent('Arjun Patel (EMP100)')

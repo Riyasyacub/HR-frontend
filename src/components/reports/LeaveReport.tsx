@@ -4,9 +4,10 @@ import Pager from '../Pager'
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import DownloadReportButton from './DownloadReportButton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 
 const cells = (balances: LeaveBalance[], unpaidDays: number) =>
-  [...balances.flatMap((balance) => [balance.entitled, balance.used, balance.remaining]), unpaidDays].map((value, index) => <td key={index} className="p-2">{value}</td>)
+  [...balances.flatMap((balance) => [balance.entitled, balance.used, balance.remaining]), unpaidDays].map((value, index) => <TableCell key={index}>{value}</TableCell>)
 
 export default function LeaveReport({ accessToken }: { accessToken: string }) {
   const [draft, setDraft] = useState(() => ({ year: String(new Date().getFullYear()), country: '' }))
@@ -37,13 +38,13 @@ export default function LeaveReport({ accessToken }: { accessToken: string }) {
         <DownloadReportButton accessToken={accessToken} report="leave" params={params} />
       </form>
       {error && <p role="alert" className="text-red-600">{error}</p>}
-      <table className="w-full text-left">
-        <thead><tr>{['Employee ID', 'Name', ...types.flatMap((type) => ['entitled', 'used', 'remaining'].map((part) => `${type} ${part}`)), 'Unpaid days'].map((heading) => <th key={heading} className="p-2">{heading}</th>)}</tr></thead>
-        <tbody>
-          {report?.data.map((row) => <tr key={row.id} className="border-t"><td className="p-2">{row.employee_id}</td><td className="p-2">{row.name}</td>{cells(row.balances, row.unpaid_days)}</tr>)}
-          {report && <tr className="border-t font-semibold"><td className="p-2" colSpan={2}>Total</td>{cells(report.meta.totals.balances, report.meta.totals.unpaid_days)}</tr>}
-        </tbody>
-      </table>
+      <div className="rounded-xl border bg-card shadow-sm"><Table>
+        <TableHeader><TableRow>{['Employee ID', 'Name', ...types.flatMap((type) => ['entitled', 'used', 'remaining'].map((part) => `${type} ${part}`)), 'Unpaid days'].map((heading) => <TableHead key={heading}>{heading}</TableHead>)}</TableRow></TableHeader>
+        <TableBody>
+          {report?.data.map((row) => <TableRow key={row.id}><TableCell>{row.employee_id}</TableCell><TableCell>{row.name}</TableCell>{cells(row.balances, row.unpaid_days)}</TableRow>)}
+          {report && <TableRow className="font-semibold"><TableCell colSpan={2}>Total</TableCell>{cells(report.meta.totals.balances, report.meta.totals.unpaid_days)}</TableRow>}
+        </TableBody>
+      </Table></div>
       <Pager page={page} pageCount={pageCount} onPage={setPage} />
     </section>
   )

@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { listLeaveRecords, type LeaveRecord } from '../api/leaves'
 import { useAuth } from '../auth/AuthContext'
+import PageHeader from '../components/PageHeader'
+import StatusBadge from '../components/StatusBadge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../components/ui/table'
 
 export default function LeaveRecordsPage() {
   const { session } = useAuth()
@@ -16,26 +19,28 @@ export default function LeaveRecordsPage() {
   }, [session, leaveDate])
 
   return (
-    <main className="p-6 space-y-4">
-      <h1 className="text-2xl font-semibold">Leave records</h1>
-      <input aria-label="Leave date" type="date" value={leaveDate} onChange={(e) => setLeaveDate(e.target.value)} className="border rounded p-1.5 text-sm" />
+    <main className="mx-auto max-w-5xl space-y-4 p-6">
+      <PageHeader title="Leave records" description="Imported leave, filtered by date." />
+      <input aria-label="Leave date" type="date" value={leaveDate} onChange={(e) => setLeaveDate(e.target.value)} className="h-9 rounded-md border bg-background px-3 text-sm" />
       {error && <p role="alert" className="text-sm text-red-600">{error}</p>}
       {records?.length === 0 && <p className="text-sm text-muted-foreground">No leave records.</p>}
       {Boolean(records?.length) && (
-        <table className="w-full text-sm text-left">
-          <thead><tr><th className="p-2">Employee</th><th className="p-2">Date</th><th className="p-2">Type</th><th className="p-2">Reason</th><th className="p-2">Payroll</th></tr></thead>
-          <tbody>
-            {records?.map((record) => (
-              <tr key={record.id} className="border-t">
-                <td className="p-2">{record.employee.name} ({record.employee.employee_id})</td>
-                <td className="p-2">{record.leave_date}</td>
-                <td className="p-2">{record.leave_type}</td>
-                <td className="p-2">{record.reason ?? '—'}</td>
-                <td className="p-2">{record.payroll_deduction ? 'Payroll deduction' : '—'}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="rounded-xl border bg-card shadow-sm">
+          <Table>
+            <TableHeader><TableRow><TableHead>Employee</TableHead><TableHead>Date</TableHead><TableHead>Type</TableHead><TableHead>Reason</TableHead><TableHead>Payroll</TableHead></TableRow></TableHeader>
+            <TableBody>
+              {records?.map((record) => (
+                <TableRow key={record.id}>
+                  <TableCell className="font-medium">{record.employee.name} ({record.employee.employee_id})</TableCell>
+                  <TableCell>{record.leave_date}</TableCell>
+                  <TableCell>{record.leave_type}</TableCell>
+                  <TableCell className="text-muted-foreground">{record.reason ?? '—'}</TableCell>
+                  <TableCell>{record.payroll_deduction ? <StatusBadge status="Payroll deduction" tone="warning" /> : '—'}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       )}
     </main>
   )

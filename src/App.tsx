@@ -1,5 +1,6 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
+import AppShell from './components/AppShell'
 import DashboardPage from './pages/DashboardPage'
 import EmployeeImportPage from './pages/EmployeeImportPage'
 import EmployeeProfilePage from './pages/EmployeeProfilePage'
@@ -19,7 +20,7 @@ function RequireAuth() {
   const { status } = useAuth()
   if (status === 'loading') return <main className="p-6">Loading…</main>
   if (status === 'unauthenticated') return <Navigate to="/sign-in" replace />
-  return <Outlet />
+  return <AppShell><Outlet /></AppShell>
 }
 
 function RequireHr() {

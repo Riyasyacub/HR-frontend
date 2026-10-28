@@ -20,9 +20,10 @@ describe('HeadcountReport', () => {
 
     render(<HeadcountReport accessToken="token" />)
 
-    expect(await screen.findByRole('row', { name: 'India 2 1' })).toBeInTheDocument()
-    expect(screen.getByRole('row', { name: 'USA 1 0' })).toBeInTheDocument()
-    expect(screen.getByRole('row', { name: 'Total 3 1' })).toBeInTheDocument()
+    expect(await screen.findByRole('row', { name: 'India 2' })).toBeInTheDocument()
+    expect(screen.getByRole('row', { name: 'USA 1' })).toBeInTheDocument()
+    expect(screen.getByRole('row', { name: 'Total 3' })).toBeInTheDocument()
+    expect(screen.queryByRole('columnheader', { name: 'Onboarding' })).not.toBeInTheDocument()
     expect(getHeadcount).toHaveBeenCalledWith('token', { group_by: 'country', country: '' })
     expect(screen.getByText('download {"group_by":"country","country":""}')).toBeInTheDocument()
   })

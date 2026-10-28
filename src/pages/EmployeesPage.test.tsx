@@ -97,6 +97,7 @@ describe('EmployeesPage', () => {
     expect(screen.getAllByText('Engineering')).toHaveLength(2)
     expect(screen.getByText('Arjun Patel')).toBeInTheDocument()
     expect(screen.getByText('—')).toBeInTheDocument()
+    expect(screen.getAllByText('active').filter((element) => element.dataset.tone === 'success')).toHaveLength(2)
     expect(listEmployees).toHaveBeenCalledWith('hr-token', 1, 100, '')
   })
 

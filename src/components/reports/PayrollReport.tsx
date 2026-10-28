@@ -3,6 +3,7 @@ import { getPayrollReport, type PayrollReport as Report } from '../../api/report
 import { Button } from '../ui/button'
 import { Input } from '../ui/input'
 import DownloadReportButton from './DownloadReportButton'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../ui/table'
 
 const HEADINGS = ['Month', 'Country', 'Currency', 'Employees', 'Monthly gross', 'Unpaid deduction', 'Total']
 
@@ -32,16 +33,16 @@ export default function PayrollReport({ accessToken }: { accessToken: string }) 
       </form>
       {error && <p role="alert" className="text-red-600">{error}</p>}
       {report?.data.length === 0 && <p className="text-muted-foreground">No generated payroll runs for this year.</p>}
-      <table className="w-full text-left">
-        <thead><tr>{HEADINGS.map((heading) => <th key={heading} className="p-2">{heading}</th>)}</tr></thead>
-        <tbody>
+      <div className="rounded-xl border bg-card shadow-sm"><Table>
+        <TableHeader><TableRow>{HEADINGS.map((heading) => <TableHead key={heading}>{heading}</TableHead>)}</TableRow></TableHeader>
+        <TableBody>
           {report?.data.map((row) => (
-            <tr key={`${row.month}-${row.country}-${row.currency}`} className="border-t">
-              {[row.month, row.country, row.currency, row.employees, row.monthly_gross, row.unpaid_deduction, row.total].map((value, index) => <td key={index} className="p-2">{value}</td>)}
-            </tr>
+            <TableRow key={`${row.month}-${row.country}-${row.currency}`}>
+              {[row.month, row.country, row.currency, row.employees, row.monthly_gross, row.unpaid_deduction, row.total].map((value, index) => <TableCell key={index}>{value}</TableCell>)}
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table></div>
     </section>
   )
 }

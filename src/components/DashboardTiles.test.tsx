@@ -24,11 +24,11 @@ describe('DashboardTiles', () => {
     vi.mocked(listPayrollRuns).mockResolvedValue({ data: [run], meta: { page: 1, per_page: 25, total: 1 } })
   })
 
-  it('shows HR headcount, onboarding, joiners this month and the latest payroll run linked to their lists', async () => {
+  it('shows HR headcount, joiners this month and the latest payroll run linked to their lists, without onboarding', async () => {
     renderTiles(true)
 
     expect(await screen.findByRole('link', { name: 'Headcount 42' })).toHaveAttribute('href', '/reports')
-    expect(screen.getByRole('link', { name: 'Onboarding 3' })).toHaveAttribute('href', '/reports')
+    expect(screen.queryByText('Onboarding')).not.toBeInTheDocument()
     expect(await screen.findByRole('link', { name: 'Joiners this month 5' })).toHaveAttribute('href', '/reports')
     expect(await screen.findByRole('link', { name: 'Latest payroll 2026-11 generated' })).toHaveAttribute('href', '/payroll/4')
     expect(getJoiners).toHaveBeenCalledWith('token', { from: '2026-11-01', to: '2026-11-30' }, 1)
