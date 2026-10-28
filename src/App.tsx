@@ -1,6 +1,7 @@
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import { useAuth } from './auth/AuthContext'
 import AppShell from './components/AppShell'
+import AssistantPage from './pages/AssistantPage'
 import DashboardPage from './pages/DashboardPage'
 import EmployeeImportPage from './pages/EmployeeImportPage'
 import EmployeeProfilePage from './pages/EmployeeProfilePage'
@@ -46,6 +47,7 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/employees/:id" element={<EmployeeProfilePage />} />
         <Route path="/leave-records" element={<LeaveRecordsPage />} />
+        <Route path="/assistant" element={<AssistantPage />} />
         <Route element={<RequireReportAccess />}>
           <Route path="/reports" element={<ReportsPage />} />
           <Route path="/org-chart" element={<OrgChartPage />} />

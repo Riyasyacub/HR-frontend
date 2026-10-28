@@ -27,16 +27,16 @@ describe('AppShell', () => {
   it('shows HR every section', () => {
     const nav = renderShell({ role: 'HR' })
 
-    expect(linkNames(nav)).toEqual(['Dashboard', 'Employees', 'Org chart', 'Leave records', 'Leave upload', 'Payroll runs', 'Employee import', 'Reports', 'Settings'])
+    expect(linkNames(nav)).toEqual(['Dashboard', 'Employees', 'Org chart', 'Leave records', 'Leave upload', 'Payroll runs', 'Employee import', 'Reports', 'Assistant', 'Settings'])
     expect(screen.getByText('page content')).toBeInTheDocument()
   })
 
   it('shows a manager their team tools without HR sections', () => {
-    expect(linkNames(renderShell({ is_manager: true }))).toEqual(['Dashboard', 'Org chart', 'My team', 'Leave records', 'Reports'])
+    expect(linkNames(renderShell({ is_manager: true }))).toEqual(['Dashboard', 'Org chart', 'My team', 'Leave records', 'Reports', 'Assistant'])
   })
 
   it('shows an employee only their own sections', () => {
-    expect(linkNames(renderShell({}))).toEqual(['Dashboard', 'Leave records'])
+    expect(linkNames(renderShell({}))).toEqual(['Dashboard', 'Leave records', 'Assistant'])
   })
 
   it('marks the current page active', () => {

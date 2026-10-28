@@ -15,7 +15,7 @@ const SECTIONS: { label: string; links: { to: string; label: string; access: Acc
   { label: 'Leave', links: [{ to: '/leave-records', label: 'Leave records', access: 'all' }, { to: '/leave-upload', label: 'Leave upload', access: 'hr' }] },
   { label: 'Payroll', links: [{ to: '/payroll', label: 'Payroll runs', access: 'hr' }] },
   { label: 'Data', links: [{ to: '/employee-import', label: 'Employee import', access: 'hr' }] },
-  { label: 'Insights', links: [{ to: '/reports', label: 'Reports', access: 'hrOrManager' }] },
+  { label: 'Insights', links: [{ to: '/reports', label: 'Reports', access: 'hrOrManager' }, { to: '/assistant', label: 'Assistant', access: 'all' }] },
   { label: 'Admin', links: [{ to: '/settings', label: 'Settings', access: 'hr' }] },
 ]
 
