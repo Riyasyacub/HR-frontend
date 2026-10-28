@@ -15,8 +15,15 @@ story slice; do not add another component library.
 
 ## Current stage
 
-S01 is complete: sign-in, session restore, protected dashboard routes, role-aware landing,
-logout, and HR-only settings access.
+Built through S11c: sign-in and roles, employees and org chart, leave and employee imports, payroll,
+reports with trend charts, and the NL-to-SQL assistant, in a shadcn sidebar layout. Later stories are
+documented in the API repository's `docs/future-plans.md`.
+
+## Running with Docker
+
+The API repository's `docker-compose.yml` runs this app's Vite dev server (port 5173) together with the
+API, worker, database and Mailhog; see that repository's README. Inside Compose the dev server proxies
+`/api` to `VITE_API_PROXY_TARGET` (`http://web:3000`); locally it defaults to `http://localhost:3000`.
 
 ## Commands
 
